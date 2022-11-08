@@ -1,11 +1,14 @@
 import React, { useRef, useEffect } from 'react'
 
+interface IDrawCallback {
+  (context:CanvasRenderingContext2D, frameCount:number):void;
+}
+
 interface IProps {
-  onDraw:any,
+  onDraw:IDrawCallback,
   isAnimated:boolean,
   width:number,
   height:number,
-  
 }
 
 function Canvas(props:IProps) {
@@ -14,15 +17,15 @@ function Canvas(props:IProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const context = canvas.getContext('2d');
+    const context = canvasRef.current?.getContext('2d');
+    if (!context) return;
+    
     let frameCount = 0;
     let animationFrameId = -1;
 
     const render = () => {
       frameCount++;
-      onDraw({context, frameCount});
+      onDraw(context, frameCount);
       if (isAnimated) animationFrameId = window.requestAnimationFrame(render);
     };
     render();
