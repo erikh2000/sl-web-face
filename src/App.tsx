@@ -1,20 +1,21 @@
 import Canvas from "./common/Canvas";
-import Mouth from "./mouth/Mouth";
+import { loadMouthComponent } from "./mouth/Mouth";
 import './App.css';
 import React, {useEffect} from 'react';
 import VisemeSelector from "./ui/VisemeSelector";
+import CanvasComponent from "./canvasComponent/CanvasComponent";
 
-let mouth:Mouth|null = null;
+let mouth:CanvasComponent|null = null;
 let isInitialized:boolean = false;
 
 async function _init():Promise<void> {
-  mouth = new Mouth('/images/theMaw.png');
+  mouth = await loadMouthComponent({faceSheetUrl:'/images/theMaw.png'});
 }
 
 function _onDrawCanvas(context:CanvasRenderingContext2D, frameCount:number) {
   context.clearRect(0, 0, context.canvas.width, context.canvas.height);
   if (!isInitialized) return;
-  mouth?.onRender(context, frameCount);
+  mouth?.render(context);
 }
 
 function App() {

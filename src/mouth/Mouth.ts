@@ -1,8 +1,8 @@
-import {ICanvasRenderable} from "../rendering/ICanvasRenderable";
 import {loadImage} from "../common/imageUtil";
 import {Viseme} from "./visemes";
 import Topics from '../events/topics';
 import { subscribeEvent } from "../events/thePubSub";
+import CanvasComponent from "../canvasComponent/CanvasComponent";
 
 const Y_MOUTHS = 0;
 const X_MOUTHS = 1536;
@@ -18,28 +18,32 @@ async function _loadVisemeBitmaps(faceSheetUrl:string):Promise<ImageBitmap[]> {
   return bitmaps;
 }
 
-class Mouth implements ICanvasRenderable{
-  isInitialized:boolean;
-  visemeBitmaps:ImageBitmap[];
-  currentViseme:Viseme;
-  
-  private async _init(faceSheetUrl:string) {
-    this.visemeBitmaps = await _loadVisemeBitmaps(faceSheetUrl);
-    this.isInitialized = true;
-    subscribeEvent(Topics.VISEME, (event) => this.currentViseme = event as Viseme);
-  }
-  
-  constructor(faceSheetUrl:string) {
-    this.isInitialized = false;
-    this.visemeBitmaps = [];
-    this.currentViseme = Viseme.L;
-   this._init(faceSheetUrl);
-  }
-  
-  onRender(context:CanvasRenderingContext2D, frameCount:number):void {
-    if (!this.isInitialized) return;
-    context.drawImage(this.visemeBitmaps[this.currentViseme], 0, 0);
-  }
+export type MouthInitData = {
+  faceSheetUrl:string
 }
 
-export default Mouth;
+type MouthComponentState = {
+  visemeBitmaps:ImageBitmap[];
+  currentViseme:Viseme;
+}
+
+async function _onLoad(initData:any):Promise<any> {
+  const mouthInitData = initData as MouthInitData;
+  const mouthComponentState:MouthComponentState = {
+    visemeBitmaps: await _loadVisemeBitmaps(mouthInitData.faceSheetUrl),
+    currentViseme: Viseme.MBP
+  };
+  subscribeEvent(Topics.VISEME, (event) => mouthComponentState.currentViseme = event as Viseme);
+  return mouthComponentState;
+}
+
+function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number) {
+  const { visemeBitmaps, currentViseme } = componentState;
+  context.drawImage(visemeBitmaps[currentViseme], x, y);
+}
+
+export async function loadMouthComponent(initData:MouthInitData):Promise<CanvasComponent> {
+  const component = new CanvasComponent(_onLoad, _onRender);
+  await component.load(initData);
+  return component;
+} 
