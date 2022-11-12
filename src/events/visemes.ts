@@ -1,4 +1,5 @@
 export enum Viseme {
+  REST,
   AI,
   CONS,
   E,

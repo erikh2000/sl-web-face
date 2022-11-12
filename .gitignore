@@ -6,10 +6,9 @@
 build
 dist
 docs/dist
-example/public/main.js
 
-# spiels
-public/spiels
+# source assets
+workAssets 
 
 #
 # General-Purpose Exclusions

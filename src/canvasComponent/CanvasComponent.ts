@@ -89,6 +89,12 @@ class CanvasComponent {
     this._children.push(childComponent);
   }
   
+  addChildAt(childComponent:CanvasComponent, offsetX:number, offsetY:number) {
+    childComponent.offsetX = offsetX;
+    childComponent.offsetY = offsetY;
+    this.addChild(childComponent);
+  }
+  
   removeChild(childComponent:CanvasComponent) {
     childComponent.setParent(null);
   }

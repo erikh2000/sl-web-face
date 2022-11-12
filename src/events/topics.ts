@@ -1,4 +1,5 @@
 const Topics = {
+  EMOTION: 'emotion',
   VISEME: 'viseme'
 };
 

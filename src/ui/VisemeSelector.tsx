@@ -1,4 +1,4 @@
-import {Viseme} from "../mouth/visemes";
+import {Viseme} from "../events/visemes";
 import Topics from '../events/topics';
 import {publishEvent} from "../events/thePubSub";
 import styles from './VisemeSelector.module.css';
@@ -14,6 +14,7 @@ function _onVisemeClick(viseme:Viseme) {
 function VisemeSelector(props:IProps) {
   return (
     <div className={styles.bar}>
+      <button onClick={() => _onVisemeClick(Viseme.REST)}>-</button>
       <button onClick={() => _onVisemeClick(Viseme.AI)}>AI</button>
       <button onClick={() => _onVisemeClick(Viseme.CONS)}>Cons</button>
       <button onClick={() => _onVisemeClick(Viseme.E)}>E</button>
