@@ -7,15 +7,21 @@ import CanvasComponent from "./canvasComponent/CanvasComponent";
 import {loadHeadComponent} from "./head/head";
 import EmotionSelector from "./ui/EmotionSelector";
 import {loadEyesComponent} from "./eyes/eyes";
+import PreRenderCanvas from "./common/PreRenderCanvas";
 
 let head:CanvasComponent|null = null;
 let isInitialized:boolean = false;
 
 async function _init():Promise<void> {
-  // TODO Promise.all() the loads.
   head = await loadHeadComponent({spriteSheetUrl:'/images/billy-face.png'});
   const mouth = await loadMouthComponent({spriteSheetUrl:'/images/billy-mouth.png'});
-  const eyes = await loadEyesComponent({spriteSheetUrl:'/images/billy-eyes.png'});
+  const eyes = await loadEyesComponent({
+    spriteSheetUrl:'/images/billy-eyes.png',
+    backOffsetX: -4,
+    irisesOffsetX: -2,
+    lidsOffsetY: 4,
+    lidsOffsetX: 4,
+  });
   head.addChildAt(mouth, 20, 290);
   head.addChildAt(eyes, 25, 150);
   head.offsetX = 200;
@@ -40,6 +46,7 @@ function App() {
       <EmotionSelector />
       <VisemeSelector />
       <Canvas width={500} height={500} isAnimated={true} onDraw={_onDrawCanvas}/>
+      <PreRenderCanvas width={1024} height={1024} />
     </div>
   );
 }
