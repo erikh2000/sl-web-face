@@ -7,13 +7,14 @@ interface IDrawCallback {
 interface IProps {
   onDraw:IDrawCallback,
   isAnimated:boolean,
+  onMouseMove?:any,
   width:number,
   height:number,
 }
 
 function Canvas(props:IProps) {
 
-  const { onDraw, isAnimated, width, height } = props;
+  const { onDraw, onMouseMove, isAnimated, width, height } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -35,7 +36,7 @@ function Canvas(props:IProps) {
     }
   }, [onDraw, isAnimated]);
 
-  return <canvas className='Canvas' width={width} height={height} ref={canvasRef} />;
+  return <canvas className='Canvas' width={width} height={height} onMouseMove={onMouseMove} ref={canvasRef} />;
 }
 
 export default Canvas;

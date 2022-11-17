@@ -41,6 +41,11 @@ function _isPixelTransparent(width:number, x:number, y:number, sourcePixels:Uint
   return sourcePixels[offset] < OPACITY_THRESHOLD;
 }
 
+function _isPixelOpaque(width:number, x:number, y:number, sourcePixels:Uint8ClampedArray):boolean {
+  const offset = _getPixelOffset(width, x, y) + ALPHA_OFFSET;
+  return sourcePixels[offset] >= OPACITY_THRESHOLD;
+}
+
 function _isPixelFullyOpaque(width:number, x:number, y:number, sourcePixels:Uint8ClampedArray):boolean {
   const offset = _getPixelOffset(width, x, y) + ALPHA_OFFSET;
   return sourcePixels[offset] === OPAQUE_ALPHA;
@@ -106,39 +111,109 @@ export function createInnerAlphaMask(sourceImageData:ImageData):ImageData {
   return new ImageData(maskImagePixels, width, height);
 }
 
-function _findOpaqueAreaCentroid(imagePixels:Uint8ClampedArray, width:number, height:number, x:number, y:number, 
-  minPixelCount:number, processedPixels:boolean[][]):number[]|null {
+export interface IFoundPixelCallback {
+  (x:number, y:number):void
+}
+
+
+export enum AreaMeasurementFlags {
+  DEFAULT = 0, // Centroid and pixel count will always be returned.
+  DIMENSIONS = 1,
+  FULLY_OPAQUE = 2 // versus "mostly opaque".
+}
+
+export type AreaMeasurements = {
+  flags:number,
+  centroidX:number,
+  centroidY:number,
+  left:number,
+  top:number,
+  right:number,
+  bottom:number,
+  width:number,
+  height:number,
+  pixelCount:number
+}
+
+function _findAndMeasureOpaqueArea(imagePixels:Uint8ClampedArray, width:number, height:number, x:number, y:number, 
+  minPixelCount:number, processedPixels:boolean[][], measureFlags:number = AreaMeasurementFlags.DEFAULT):AreaMeasurements|null {
   
-  let xSum = 0, ySum = 0, foundCount = 0;
+  let xSum = 0, ySum = 0, pixelCount = 0;
+  let leftMost = 999999, topMost = 999999, rightMost = -1, bottomMost = -1;
+  const isMeasuringDimensions = measureFlags & AreaMeasurementFlags.DIMENSIONS;
+  const checkPixelFunc = measureFlags & AreaMeasurementFlags.FULLY_OPAQUE ?
+    _isPixelFullyOpaque : _isPixelOpaque;
   
   function _onEval(evalX:number, evalY:number):boolean {
-    if (!_isPixelFullyOpaque(width, evalX, evalY, imagePixels)) return false;
-    ++foundCount;
+    if (!checkPixelFunc(width, evalX, evalY, imagePixels)) return false;
+    ++pixelCount;
     xSum += evalX;
     ySum += evalY;
+    if (isMeasuringDimensions) {
+      if (evalX < leftMost) leftMost = evalX;
+      if (evalX > rightMost) rightMost = evalX;
+      if (evalY < topMost) topMost = evalY;
+      if (evalY > bottomMost) bottomMost = evalY;
+    }
     return true;
   }
   
   floodFillAt(_onEval, width, height, x, y, processedPixels);
   
-  if (foundCount < minPixelCount) return null;
-  return [Math.round(xSum / foundCount), Math.round(ySum / foundCount)];
+  if (pixelCount < minPixelCount) return null;
+  
+  return {
+    flags: measureFlags,
+    centroidX:Math.round(xSum / pixelCount),
+    centroidY:Math.round(ySum / pixelCount),
+    left: isMeasuringDimensions ? leftMost : 0,
+    top: isMeasuringDimensions ? topMost : 0,
+    right: isMeasuringDimensions ? rightMost : 0,
+    bottom: isMeasuringDimensions ? bottomMost : 0,
+    width: isMeasuringDimensions  ? rightMost - leftMost + 1 : 0,
+    height: isMeasuringDimensions  ? bottomMost - topMost + 1 : 0,
+    pixelCount
+  }
 }
 
-export function findOpaqueAreaCentroids(imageData:ImageData, minAreaCoverageFactor:number):(number[])[] {
+interface ICheckPixelFunc {
+  (width:number, x:number, y:number, pixels:Uint8ClampedArray):boolean
+}
+
+export function findAndMeasureOpaqueAreas(imageData:ImageData, minAreaCoverageFactor:number, measureFlags:number = AreaMeasurementFlags.DEFAULT):AreaMeasurements[] {
   const { width, height, data:imagePixels } = imageData;
   const minPixelCount = width * height * minAreaCoverageFactor;
   const processedPixels = createCoordToProcessed(width);
-  const centroids:(number[])[] = [];
+  const checkPixelFunc = measureFlags & AreaMeasurementFlags.FULLY_OPAQUE ?
+    _isPixelFullyOpaque : _isPixelOpaque;
+  const areas:(AreaMeasurements)[] = [];
   
   for(let y = 0; y < height; ++y) {
     for(let x = 0; x < width; ++x) {
       if (processedPixels[x][y]) continue;
-      if (_isPixelFullyOpaque(width, x, y, imagePixels)) {
-        const centroid = _findOpaqueAreaCentroid(imagePixels, width, height, x, y, minPixelCount, processedPixels);
-        if (centroid) centroids.push(centroid);
+      if (checkPixelFunc(width, x, y, imagePixels)) {
+        const areaMeasurement = _findAndMeasureOpaqueArea(imagePixels, width, height, x, y, minPixelCount, processedPixels, measureFlags);
+        if (areaMeasurement) areas.push(areaMeasurement);
       }
     }
   }
-  return centroids;
+  return areas;
+}
+
+export function sliceImageData(sourceImageData:ImageData, sourceX:number, sourceY:number, destWidth:number, destHeight:number):ImageData {
+  const sourcePixels = sourceImageData.data;
+  const DEST_ROW_SIZE = destWidth * PIXEL_SIZE;
+  const SOURCE_ROW_SIZE = sourceImageData.width * PIXEL_SIZE;
+  const SOURCE_ROW_LEAP = SOURCE_ROW_SIZE - DEST_ROW_SIZE;
+  const destPixels = new Uint8ClampedArray(destHeight * DEST_ROW_SIZE);
+  let readOffset = _getPixelOffset(destWidth, sourceX, sourceY);
+  let writeOffset = 0; 
+  for(let rowI = 0; rowI < destHeight; ++rowI) {
+    const stopReadOffset = readOffset + DEST_ROW_SIZE;
+    while(readOffset !== stopReadOffset) {
+      destPixels[writeOffset++] = sourcePixels[readOffset++];
+    }
+    readOffset += SOURCE_ROW_LEAP;
+  }
+  return new ImageData(destPixels, destWidth, destHeight);
 }

@@ -65,6 +65,16 @@ class IrisArea {
     const y = this._centerY + Math.sin(angle) * useDistance;
     return [x,y];
   }
+
+  constrainToLowestCommonAngleDistances(otherIris:IrisArea) {
+    for(let angleI = 0; angleI < ANGLE_INDEX_COUNT; ++angleI) {
+      if (this._angleDistances[angleI] < otherIris._angleDistances[angleI]) {
+        otherIris._angleDistances[angleI] = this._angleDistances[angleI];
+      } else {
+        this._angleDistances[angleI] = otherIris._angleDistances[angleI];
+      }
+    }
+  }
 }
 
 export default IrisArea;

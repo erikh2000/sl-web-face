@@ -8,9 +8,17 @@ import {loadHeadComponent} from "./head/head";
 import EmotionSelector from "./ui/EmotionSelector";
 import {loadEyesComponent} from "./eyes/eyes";
 import PreRenderCanvas from "./common/PreRenderCanvas";
+import {publishEvent} from "./events/thePubSub";
+import Topics from "./events/topics";
+import BlinkController from "./eyes/BlinkController";
+
+const CANVAS_WIDTH = 500;
+const CANVAS_HEIGHT = 500;
+const MAX_PRERENDER_WIDTH = 1024, MAX_PRERENDER_HEIGHT = 1024;
 
 let head:CanvasComponent|null = null;
 let isInitialized:boolean = false;
+const blinkController = new BlinkController();
 
 async function _init():Promise<void> {
   head = await loadHeadComponent({spriteSheetUrl:'/images/billy-face.png'});
@@ -26,12 +34,19 @@ async function _init():Promise<void> {
   head.addChildAt(eyes, 25, 150);
   head.offsetX = 200;
   head.offsetY = 20;
+  blinkController.start();
 }
 
 function _onDrawCanvas(context:CanvasRenderingContext2D, frameCount:number) {
   context.clearRect(0, 0, context.canvas.width, context.canvas.height);
   if (!isInitialized || !head) return;
   head.renderWithChildren(context);
+}
+
+function _onCanvasMouseMove(event:any) {
+  const dx = (event.screenX - window.screen.width/2) / window.screen.width;
+  const dy = (event.screenY - window.screen.height/2) / window.screen.height;
+  publishEvent(Topics.ATTENTION, {dx, dy});
 }
 
 function App() {
@@ -42,11 +57,11 @@ function App() {
   }, []);
 
   return (
-    <div className="App">
+    <div className="App" onMouseMove={_onCanvasMouseMove}>
       <EmotionSelector />
       <VisemeSelector />
-      <Canvas width={500} height={500} isAnimated={true} onDraw={_onDrawCanvas}/>
-      <PreRenderCanvas width={1024} height={1024} />
+      <Canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} isAnimated={true} onDraw={_onDrawCanvas} />
+      <PreRenderCanvas width={MAX_PRERENDER_WIDTH} height={MAX_PRERENDER_HEIGHT} />
     </div>
   );
 }
