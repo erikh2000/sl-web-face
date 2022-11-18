@@ -1,8 +1,9 @@
 const Topics = {
+  ATTENTION: 'attention',
   BLINK: 'blink',
   EMOTION: 'emotion',
-  VISEME: 'viseme',
-  ATTENTION: 'attention'
+  LID_LEVEL: 'lid level',
+  VISEME: 'viseme'
 };
 
 export default Topics;

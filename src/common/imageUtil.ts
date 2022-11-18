@@ -176,10 +176,6 @@ function _findAndMeasureOpaqueArea(imagePixels:Uint8ClampedArray, width:number, 
   }
 }
 
-interface ICheckPixelFunc {
-  (width:number, x:number, y:number, pixels:Uint8ClampedArray):boolean
-}
-
 export function findAndMeasureOpaqueAreas(imageData:ImageData, minAreaCoverageFactor:number, measureFlags:number = AreaMeasurementFlags.DEFAULT):AreaMeasurements[] {
   const { width, height, data:imagePixels } = imageData;
   const minPixelCount = width * height * minAreaCoverageFactor;

@@ -11,6 +11,7 @@ import PreRenderCanvas from "./common/PreRenderCanvas";
 import {publishEvent} from "./events/thePubSub";
 import Topics from "./events/topics";
 import BlinkController from "./eyes/BlinkController";
+import LidLevelSelector from "./ui/LidLevelSelector";
 
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
@@ -27,7 +28,7 @@ async function _init():Promise<void> {
     spriteSheetUrl:'/images/billy-eyes.png',
     backOffsetX: -4,
     irisesOffsetX: -2,
-    lidsOffsetY: 4,
+    lidsOffsetY: -2,
     lidsOffsetX: 4,
   });
   head.addChildAt(mouth, 20, 290);
@@ -59,6 +60,7 @@ function App() {
   return (
     <div className="App" onMouseMove={_onCanvasMouseMove}>
       <EmotionSelector />
+      <LidLevelSelector />
       <VisemeSelector />
       <Canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} isAnimated={true} onDraw={_onDrawCanvas} />
       <PreRenderCanvas width={MAX_PRERENDER_WIDTH} height={MAX_PRERENDER_HEIGHT} />

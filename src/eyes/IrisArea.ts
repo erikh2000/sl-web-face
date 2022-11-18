@@ -46,7 +46,7 @@ class IrisArea {
   private _centerY:number;
   private _angleDistances:number[];
   
-  constructor(centerX:number, centerY:number,  innerMaskImageData:ImageData) {
+  constructor(centerX:number, centerY:number, innerMaskImageData:ImageData) {
     this._centerX = centerX;
     this._centerY = centerY;
     this._angleDistances = _calcAngleDistances(centerX, centerY, 

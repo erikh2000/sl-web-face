@@ -1,10 +1,10 @@
 import {
-  AreaMeasurementFlags, AreaMeasurements,
+  AreaMeasurementFlags,
+  AreaMeasurements,
   createInnerAlphaMask,
   findAndMeasureOpaqueAreas,
   imageBitmapToImageData,
-  loadImage,
-  sliceImageData
+  loadImage
 } from "../common/imageUtil";
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 import IrisArea from "./IrisArea";
@@ -12,12 +12,14 @@ import {Emotion} from "../events/emotions";
 import Topics from '../events/topics';
 import {subscribeEvent} from "../events/thePubSub";
 import {thePreRenderContext} from "../common/thePreRenderContext";
+import LidLevel from "../events/lidLevels";
 
 type Emotional = {
   overlayBitmap:ImageBitmap,
   innerMaskBitmap:ImageBitmap,
   leftIrisArea:IrisArea,
-  rightIrisArea:IrisArea
+  rightIrisArea:IrisArea,
+  lidTravelHeight:number
 }
 
 type IrisInfo = {
@@ -37,8 +39,6 @@ type EyesBitmaps = {
 type BaseOffsets = {
   backOffsetX:number,
   backOffsetY:number,
-  irisesOffsetX:number,
-  irisesOffsetY:number,
   lidsOffsetX:number,
   lidsOffsetY:number
 }
@@ -46,6 +46,7 @@ type BaseOffsets = {
 type EyesComponentState = EyesBitmaps & {
   currentEmotion:Emotion,
   targetDx:number, targetDy:number,
+  restingLidLevel:LidLevel,
   isBlinking:boolean,
   blinkStartTime:number,
   baseOffsets:BaseOffsets
@@ -58,7 +59,7 @@ const Y_IRISES = 12*CY_EYES;
 const Y_LIDS = 13*CY_EYES;
 const MIN_MASK_COVERAGE_FACTOR = .01;
 const MIN_IRIS_COVERAGE_FACTOR = 0;
-const BLINK_DURATION = 100;
+const BLINK_DURATION = 200;
 
 async function _imageToOverlayBitmap(image:HTMLImageElement, emotion:Emotion):Promise<ImageBitmap> {
   return createImageBitmap(image, X_EYES, Y_EMOTION_EYES+(emotion*CY_EYES), CX_EYES, CY_EYES);
@@ -68,7 +69,7 @@ async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion):P
   const overlayBitmap = await _imageToOverlayBitmap(image, emotion);
   const overlayImageData = await imageBitmapToImageData(overlayBitmap);
   const innerMaskImageData = createInnerAlphaMask(overlayImageData);
-  const innerMaskAreas = findAndMeasureOpaqueAreas(innerMaskImageData, MIN_MASK_COVERAGE_FACTOR, AreaMeasurementFlags.FULLY_OPAQUE);
+  const innerMaskAreas = findAndMeasureOpaqueAreas(innerMaskImageData, MIN_MASK_COVERAGE_FACTOR, AreaMeasurementFlags.FULLY_OPAQUE | AreaMeasurementFlags.DIMENSIONS);
   if (innerMaskAreas.length < 2) throw Error(`Could not find 2 iris areas for emotion #${emotion}.`);
   const irisArea1 = new IrisArea(innerMaskAreas[0].centroidX, innerMaskAreas[0].centroidY, innerMaskImageData);
   const irisArea2 = new IrisArea(innerMaskAreas[1].centroidX, innerMaskAreas[1].centroidY, innerMaskImageData);
@@ -77,7 +78,13 @@ async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion):P
   const rightIrisArea = isFirstLeft ? irisArea2 : irisArea1;
   leftIrisArea.constrainToLowestCommonAngleDistances(rightIrisArea);
   const innerMaskBitmap = await createImageBitmap(innerMaskImageData);
-  return { overlayBitmap, innerMaskBitmap, leftIrisArea, rightIrisArea } as Emotional;
+  return { 
+    overlayBitmap, 
+    innerMaskBitmap, 
+    leftIrisArea, 
+    rightIrisArea,
+    lidTravelHeight: Math.max(innerMaskAreas[0].height, innerMaskAreas[1].height),
+  } as Emotional;
 }
 
 async function _generateEmotionals(image:HTMLImageElement):Promise<Emotional[]> {
@@ -147,29 +154,24 @@ function _initDataToBaseOffsets(eyesInitData:EyesInitData):BaseOffsets {
   const defZero = (value:any) => value === undefined ? 0 : value;
   const backOffsetX = defZero(eyesInitData.backOffsetX);
   const backOffsetY = defZero(eyesInitData.backOffsetY);
-  const irisesOffsetX = defZero(eyesInitData.irisesOffsetX);
-  const irisesOffsetY = defZero(eyesInitData.irisesOffsetY);
   const lidsOffsetX = defZero(eyesInitData.lidsOffsetX);
   const lidsOffsetY = defZero(eyesInitData.lidsOffsetY);
-  return { backOffsetX, backOffsetY, irisesOffsetX, irisesOffsetY, lidsOffsetX, lidsOffsetY };
+  return { backOffsetX, backOffsetY, lidsOffsetX, lidsOffsetY };
 }
 
-enum LidState {
-  CLOSED = 0,
-  SQUINT = .25,
-  NORMAL = .75,
-  WIDE = 1
-}
-
-function _updateLidsOpenAmount(eyesComponentState:EyesComponentState):number {
-  const restingLidState = LidState.NORMAL;
-  if (!eyesComponentState.isBlinking) return restingLidState;
+function _calcLidOpenOffsetAndUpdateState(eyesComponentState:EyesComponentState):number {
+  const { restingLidLevel, currentEmotion, emotionals } = eyesComponentState;
+  const { lidTravelHeight } = emotionals[currentEmotion];
+  const _openAmountToOffset = (amount:number) => -(lidTravelHeight * amount);
+  
+  if (!eyesComponentState.isBlinking) return _openAmountToOffset(restingLidLevel);
   const elapsed = Date.now() - eyesComponentState.blinkStartTime;
   if (elapsed > BLINK_DURATION) {
     eyesComponentState.isBlinking = false;
-    return restingLidState;
+    return _openAmountToOffset(restingLidLevel);
   }
-  return (1 - Math.sin((elapsed / BLINK_DURATION) * Math.PI)) * restingLidState;
+  const openAmount = (1 - Math.sin((elapsed / BLINK_DURATION) * Math.PI)) * restingLidLevel;
+  return _openAmountToOffset(openAmount);
 }
 
 async function _onLoad(initData:any):Promise<any> {
@@ -180,6 +182,7 @@ async function _onLoad(initData:any):Promise<any> {
     baseOffsets: _initDataToBaseOffsets(initData),
     currentEmotion:Emotion.NEUTRAL,
     targetDx:0, targetDy:0,
+    restingLidLevel:LidLevel.NORMAL,
     isBlinking:false,
     blinkStartTime:-1
   };
@@ -188,68 +191,34 @@ async function _onLoad(initData:any):Promise<any> {
     eyesComponentState.targetDx = event.dx;
     eyesComponentState.targetDy = event.dy;
   });
-  subscribeEvent(Topics.BLINK, (event:any) => {
+  subscribeEvent(Topics.BLINK, () => {
     if (!eyesComponentState.isBlinking) {
       eyesComponentState.isBlinking = true;
       eyesComponentState.blinkStartTime = Date.now();
     }
   });
+  subscribeEvent(Topics.LID_LEVEL, (event:any) => eyesComponentState.restingLidLevel = event as LidLevel);
   return eyesComponentState;
 }
 
-function _drawIrisAreaDebug(context:CanvasRenderingContext2D,irisArea:IrisArea) {
-  context.fillStyle = '#000000';
-  context.strokeStyle = '#ff0000';
-  context.lineWidth = 1;
-  
-  context.fillRect(irisArea.centerX - 1, irisArea.centerY - 1, 3, 3);
+// TODO Irises should be drawn within visible part of socket taking into account lids.
 
-  function _drawPerimeter(dx:number, dy:number) {
-    let [x,y] = irisArea.positionToCoords(dx, dy);
-    context.beginPath();
-    context.moveTo(irisArea.centerX, irisArea.centerY);
-    context.lineTo(x, y);
-    context.stroke();
-  }
-
-  const EXTEND_FACTOR = 1;
-  _drawPerimeter(-EXTEND_FACTOR,-EXTEND_FACTOR);
-  _drawPerimeter(0,-EXTEND_FACTOR);
-  _drawPerimeter(EXTEND_FACTOR,-EXTEND_FACTOR);
-  _drawPerimeter(-EXTEND_FACTOR,0);
-  _drawPerimeter(0,0);
-  _drawPerimeter(EXTEND_FACTOR,0)
-  _drawPerimeter(-EXTEND_FACTOR,EXTEND_FACTOR);
-  _drawPerimeter(0,EXTEND_FACTOR);
-  _drawPerimeter(EXTEND_FACTOR,EXTEND_FACTOR);
-} 
-
-async function _drawSliceDebug(context:CanvasRenderingContext2D, sourceBitmap:ImageBitmap) {
-  const sourceImageData = await imageBitmapToImageData(sourceBitmap);
-  const testImageData = sliceImageData(sourceImageData, 0, 0, CX_EYES / 2, CY_EYES);
-  const testImageBitmap = await createImageBitmap(testImageData);
-  context.drawImage(testImageBitmap, 0, 0);
-}
-
-function _drawIris(context:CanvasRenderingContext2D, irisInfo:IrisInfo, irisArea:IrisArea, targetDx:number, targetDy:number) {
-  const [x, y] = irisArea.positionToCoords(targetDx, targetDy);
+function _drawIris(context:CanvasRenderingContext2D, irisInfo:IrisInfo, irisArea:IrisArea, targetDx:number, targetDy:number, restingLidLevel:number, lidTravelHeight:number) {
+  let [x, y] = irisArea.positionToCoords(targetDx, (targetDy * restingLidLevel));
+  y += (lidTravelHeight * (1 - restingLidLevel) / 2);
   context.drawImage(irisInfo.irisBitmap, x + irisInfo.centerOffsetX, y + irisInfo.centerOffsetY);
-} 
-
-// TODO discover lid height programmatically.
-const CY_LIDS = 35;
+}
   
 function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number) {
   const preRenderContext = thePreRenderContext();
   if (!preRenderContext) return;
-  const { currentEmotion, emotionals, backBitmap, leftIris, rightIris, lidsBitmap, baseOffsets, targetDx, targetDy } = componentState as EyesComponentState;
-  const { backOffsetX, backOffsetY, irisesOffsetX, irisesOffsetY, lidsOffsetX, lidsOffsetY } = baseOffsets;
-  const { innerMaskBitmap, overlayBitmap, leftIrisArea, rightIrisArea } = emotionals[currentEmotion];
+  const { currentEmotion, restingLidLevel, emotionals, backBitmap, leftIris, rightIris, lidsBitmap, baseOffsets, targetDx, targetDy } = componentState as EyesComponentState;
+  const { backOffsetX, backOffsetY, lidsOffsetX, lidsOffsetY } = baseOffsets;
+  const { innerMaskBitmap, overlayBitmap, leftIrisArea, rightIrisArea, lidTravelHeight } = emotionals[currentEmotion];
 
   // TODO create a separate callback for updating value that affect rendering and move
   // this there.
-  const lidsOpenAmount = _updateLidsOpenAmount(componentState);
-  const lidsOpenOffset = -(lidsOpenAmount * CY_LIDS);
+  const lidsOpenOffset = _calcLidOpenOffsetAndUpdateState(componentState);
   
   preRenderContext.save();
   preRenderContext.clearRect(0,0, CX_EYES, CY_EYES)
@@ -257,8 +226,8 @@ function _onRender(componentState:any, context:CanvasRenderingContext2D, x:numbe
   preRenderContext.drawImage(innerMaskBitmap, 0, 0);
   preRenderContext.globalCompositeOperation = 'source-atop';
   preRenderContext.drawImage(backBitmap, backOffsetX, backOffsetY);
-  _drawIris(preRenderContext, leftIris, leftIrisArea, targetDx, targetDy);
-  _drawIris(preRenderContext, rightIris, rightIrisArea, targetDx, targetDy);
+  _drawIris(preRenderContext, leftIris, leftIrisArea, targetDx, targetDy, restingLidLevel, lidTravelHeight);
+  _drawIris(preRenderContext, rightIris, rightIrisArea, targetDx, targetDy, restingLidLevel, lidTravelHeight);
   preRenderContext.drawImage(lidsBitmap, lidsOffsetX, lidsOffsetY + lidsOpenOffset);
   preRenderContext.restore();
   context.drawImage(preRenderContext.canvas, x, y);
