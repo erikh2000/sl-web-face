@@ -111,11 +111,6 @@ export function createInnerAlphaMask(sourceImageData:ImageData):ImageData {
   return new ImageData(maskImagePixels, width, height);
 }
 
-export interface IFoundPixelCallback {
-  (x:number, y:number):void
-}
-
-
 export enum AreaMeasurementFlags {
   DEFAULT = 0, // Centroid and pixel count will always be returned.
   DIMENSIONS = 1,

@@ -26,7 +26,9 @@ type Emotional = {
 type IrisInfo = {
   irisBitmap:ImageBitmap,
   centerOffsetX:number,
-  centerOffsetY:number
+  centerOffsetY:number,
+  x:TweenedValue,
+  y:TweenedValue
 }
 
 type EyesBitmaps = {
@@ -44,32 +46,9 @@ type BaseOffsets = {
   lidsOffsetY:number
 }
 
-/*
-Lids first
-
-Requirements:
-* Blink event works as it currently does (smooth animation
-* Lid level event set target for lids
-* Lids will move to target at a limited speed
-* Acceleration/deceleration (easing)
-
-#2
-
-EyesComponentState {
-  lidLevel:TweenedValue
-  restingLidLevel:number
-  isBlinking:boolean
-}
-
-When receiving blink event - lidLevel.setTarget(closed eye) with callback to call lidLevel.setTarget(opened eye to resting lid level)
-When receiving Lid Level event - Set restingLidVel and call lidLevel.setTarget(new resting lid level)
-When receiving attention event - TBD
-
- */
-
 type EyesComponentState = EyesBitmaps & {
   currentEmotion:Emotion,
-  targetDx:number, targetDy:number,
+  attentionDx:number, attentionDy:number,
   restingLidLevel:LidLevel,
   lidLevel:TweenedValue,
   baseOffsets:BaseOffsets
@@ -84,6 +63,7 @@ const MIN_MASK_COVERAGE_FACTOR = .01;
 const MIN_IRIS_COVERAGE_FACTOR = 0;
 const BLINK_DURATION = 200;
 const LID_LEVEL_CHANGE_DURATION = 200;
+const IRIS_MOVE_DURATION = 200;
 
 async function _imageToOverlayBitmap(image:HTMLImageElement, emotion:Emotion):Promise<ImageBitmap> {
   return createImageBitmap(image, X_EYES, Y_EMOTION_EYES+(emotion*CY_EYES), CX_EYES, CY_EYES);
@@ -132,7 +112,9 @@ async function _createIrisInfo(irisesImageData:ImageData, irisArea:AreaMeasureme
   return {
     irisBitmap: await createImageBitmap(irisesImageData, irisArea.left, irisArea.top, irisArea.width, irisArea.height),
     centerOffsetX: irisArea.width / -2,
-    centerOffsetY: irisArea.height / -2
+    centerOffsetY: irisArea.height / -2,
+    x: new TweenedValue(0),
+    y: new TweenedValue(0)
   }
 }
 
@@ -189,21 +171,46 @@ function _calcLidOpenOffsetAndUpdateState(eyesComponentState:EyesComponentState)
   return -(lidTravelHeight * lidLevel.update());
 }
 
+function _calcIrisTargetAndUpdateState(eyesComponentState:EyesComponentState) {
+  const {attentionDx, attentionDy, restingLidLevel, leftIris, rightIris, currentEmotion, emotionals} = eyesComponentState;
+  const currentEmotional = emotionals[currentEmotion];
+  const { leftIrisArea, rightIrisArea, lidTravelHeight } = currentEmotional;
+  const lidAdjustedAttentionDy = attentionDy * restingLidLevel;
+  let [leftIrisX, leftIrisY] = leftIrisArea.positionToCoords(attentionDx, lidAdjustedAttentionDy);
+  let [rightIrisX, rightIrisY] = rightIrisArea.positionToCoords(attentionDx, lidAdjustedAttentionDy);
+  const irisOffsetY = (lidTravelHeight * (1 - restingLidLevel) / 2);
+  leftIrisX += leftIris.centerOffsetX;
+  leftIrisY += (irisOffsetY + leftIris.centerOffsetY);
+  rightIrisX += rightIris.centerOffsetX;
+  rightIrisY += (irisOffsetY + rightIris.centerOffsetY);
+  leftIris.x.setTarget(leftIrisX, IRIS_MOVE_DURATION);
+  leftIris.y.setTarget(leftIrisY, IRIS_MOVE_DURATION);
+  rightIris.x.setTarget(rightIrisX, IRIS_MOVE_DURATION);
+  rightIris.y.setTarget(rightIrisY, IRIS_MOVE_DURATION);
+}
+
 async function _onLoad(initData:any):Promise<any> {
   const { spriteSheetUrl } = initData as EyesInitData;
   const { emotionals, backBitmap, leftIris, rightIris, lidsBitmap } = await _loadBitmaps(spriteSheetUrl);
+  const currentEmotion = Emotion.NEUTRAL;
+  const restingLidLevel = LidLevel.NORMAL;
+  const attentionDx = 0, attentionDy = 0;
+  
   const eyesComponentState:EyesComponentState = { 
     emotionals, backBitmap, leftIris, rightIris, lidsBitmap,
     baseOffsets: _initDataToBaseOffsets(initData),
-    currentEmotion:Emotion.NEUTRAL,
-    targetDx:0, targetDy:0,
-    restingLidLevel:LidLevel.NORMAL,
+    currentEmotion,
+    attentionDx, attentionDy,
+    restingLidLevel,
     lidLevel:new TweenedValue(LidLevel.NORMAL)
   };
+  _calcIrisTargetAndUpdateState(eyesComponentState);
+  
   subscribeEvent(Topics.EMOTION, (event:any) => eyesComponentState.currentEmotion = event as Emotion);
   subscribeEvent(Topics.ATTENTION, (event:any) => {
-    eyesComponentState.targetDx = event.dx;
-    eyesComponentState.targetDy = event.dy;
+    eyesComponentState.attentionDx = event.dx;
+    eyesComponentState.attentionDy = event.dy;
+    _calcIrisTargetAndUpdateState(eyesComponentState);
   });
   subscribeEvent(Topics.BLINK, () => {
     if ( eyesComponentState.lidLevel.isComplete) {
@@ -217,24 +224,22 @@ async function _onLoad(initData:any):Promise<any> {
     if (nextLidLevel === eyesComponentState.restingLidLevel) return;
     eyesComponentState.restingLidLevel = nextLidLevel;
     eyesComponentState.lidLevel.setTarget(nextLidLevel, LID_LEVEL_CHANGE_DURATION);
+    _calcIrisTargetAndUpdateState(eyesComponentState);
   });
   return eyesComponentState;
 }
 
-// TODO Irises should be drawn within visible part of socket taking into account lids.
-
-function _drawIris(context:CanvasRenderingContext2D, irisInfo:IrisInfo, irisArea:IrisArea, targetDx:number, targetDy:number, restingLidLevel:number, lidTravelHeight:number) {
-  let [x, y] = irisArea.positionToCoords(targetDx, (targetDy * restingLidLevel));
-  y += (lidTravelHeight * (1 - restingLidLevel) / 2);
-  context.drawImage(irisInfo.irisBitmap, x + irisInfo.centerOffsetX, y + irisInfo.centerOffsetY);
+function _drawIrisesAndUpdate(context:CanvasRenderingContext2D, leftIris:IrisInfo, rightIris:IrisInfo) {
+  context.drawImage(leftIris.irisBitmap, leftIris.x.update(), leftIris.y.update());
+  context.drawImage(rightIris.irisBitmap, rightIris.x.update(), rightIris.y.update());
 }
   
 function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number) {
   const preRenderContext = thePreRenderContext();
   if (!preRenderContext) return;
-  const { currentEmotion, restingLidLevel, emotionals, backBitmap, leftIris, rightIris, lidsBitmap, baseOffsets, targetDx, targetDy } = componentState as EyesComponentState;
+  const { currentEmotion, emotionals, backBitmap, lidsBitmap, baseOffsets, leftIris, rightIris } = componentState as EyesComponentState;
   const { backOffsetX, backOffsetY, lidsOffsetX, lidsOffsetY } = baseOffsets;
-  const { innerMaskBitmap, overlayBitmap, leftIrisArea, rightIrisArea, lidTravelHeight } = emotionals[currentEmotion];
+  const { innerMaskBitmap, overlayBitmap } = emotionals[currentEmotion];
   
   const lidsOpenOffset = _calcLidOpenOffsetAndUpdateState(componentState);
   
@@ -244,8 +249,7 @@ function _onRender(componentState:any, context:CanvasRenderingContext2D, x:numbe
   preRenderContext.drawImage(innerMaskBitmap, 0, 0);
   preRenderContext.globalCompositeOperation = 'source-atop';
   preRenderContext.drawImage(backBitmap, backOffsetX, backOffsetY);
-  _drawIris(preRenderContext, leftIris, leftIrisArea, targetDx, targetDy, restingLidLevel, lidTravelHeight);
-  _drawIris(preRenderContext, rightIris, rightIrisArea, targetDx, targetDy, restingLidLevel, lidTravelHeight);
+  _drawIrisesAndUpdate(preRenderContext, leftIris, rightIris);
   preRenderContext.drawImage(lidsBitmap, lidsOffsetX, lidsOffsetY + lidsOpenOffset);
   preRenderContext.restore();
   context.drawImage(preRenderContext.canvas, x, y);
