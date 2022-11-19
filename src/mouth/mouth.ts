@@ -1,4 +1,4 @@
-import {loadImage} from "../common/imageUtil";
+import {loadImage} from "../rendering/imageUtil";
 import {Emotion} from "../events/emotions";
 import {Viseme} from "../events/visemes";
 import Topics from '../events/topics';

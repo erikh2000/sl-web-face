@@ -1,4 +1,4 @@
-import Canvas from "./common/Canvas";
+import Canvas from "./rendering/Canvas";
 import { loadMouthComponent } from "./mouth/mouth";
 import './App.css';
 import React, {useEffect} from 'react';
@@ -7,7 +7,7 @@ import CanvasComponent from "./canvasComponent/CanvasComponent";
 import {loadHeadComponent} from "./head/head";
 import EmotionSelector from "./ui/EmotionSelector";
 import {loadEyesComponent} from "./eyes/eyes";
-import PreRenderCanvas from "./common/PreRenderCanvas";
+import PreRenderCanvas from "./rendering/PreRenderCanvas";
 import {publishEvent} from "./events/thePubSub";
 import Topics from "./events/topics";
 import BlinkController from "./eyes/BlinkController";

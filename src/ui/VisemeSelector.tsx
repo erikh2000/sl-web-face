@@ -1,31 +1,22 @@
 import {Viseme} from "../events/visemes";
 import Topics from '../events/topics';
 import {publishEvent} from "../events/thePubSub";
-import styles from './VisemeSelector.module.css';
+import Selector from "./Selector";
+
+
+const optionNames = ['-', 'AI', 'Cons', 'E', 'FV', 'L', 'O', 'MBP', 'U', 'WQ'];
+const optionVisemes = [Viseme.REST, Viseme.AI, Viseme.CONS, Viseme.E, Viseme.FV, Viseme.L, Viseme.O, Viseme.MBP, Viseme.U, Viseme.WQ];
 
 interface IProps {
   
 }
 
-function _onVisemeClick(viseme:Viseme) {
-  publishEvent(Topics.VISEME, viseme);
+function _onChange(optionNo:number) {
+  publishEvent(Topics.VISEME, optionVisemes[optionNo]);
 }
 
 function VisemeSelector(props:IProps) {
-  return (
-    <div className={styles.bar}>
-      <button onClick={() => _onVisemeClick(Viseme.REST)}>-</button>
-      <button onClick={() => _onVisemeClick(Viseme.AI)}>AI</button>
-      <button onClick={() => _onVisemeClick(Viseme.CONS)}>Cons</button>
-      <button onClick={() => _onVisemeClick(Viseme.E)}>E</button>
-      <button onClick={() => _onVisemeClick(Viseme.FV)}>FV</button>
-      <button onClick={() => _onVisemeClick(Viseme.L)}>L</button>
-      <button onClick={() => _onVisemeClick(Viseme.O)}>O</button>
-      <button onClick={() => _onVisemeClick(Viseme.MBP)}>MBP</button>
-      <button onClick={() => _onVisemeClick(Viseme.U)}>U</button>
-      <button onClick={() => _onVisemeClick(Viseme.WQ)}>WQ</button>
-    </div>
-  );
+  return <Selector defaultOptionNo={0} label='Viseme' optionNames={optionNames} onChange={_onChange} />
 }
 
 export default VisemeSelector;

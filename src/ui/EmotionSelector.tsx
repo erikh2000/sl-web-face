@@ -1,32 +1,24 @@
 import {Emotion} from "../events/emotions";
 import Topics from '../events/topics';
 import {publishEvent} from "../events/thePubSub";
+import Selector from "./Selector";
 import styles from './EmotionSelector.module.css';
+
+const optionNames = ['Neutral', 'Confused', 'Sad', 'Afraid', 'Evil', 'Suspicious', 
+  'Amused', 'Happy', 'Thinking', 'Angry', 'Irritated'];
+const optionEmotions = [Emotion.NEUTRAL, Emotion.CONFUSED, Emotion.SAD, Emotion.AFRAID, Emotion.EVIL, Emotion.SUSPICIOUS, 
+  Emotion.AMUSED, Emotion.HAPPY, Emotion.THINKING, Emotion.ANGRY, Emotion.IRRITATED];
 
 interface IProps {
 
 }
 
-function _onEmotionClick(emotion:Emotion) {
-  publishEvent(Topics.EMOTION, emotion);
+function _onChange(optionNo:number) {
+  publishEvent(Topics.EMOTION, optionEmotions[optionNo]);
 }
 
 function EmotionSelector(props:IProps) {
-  return (
-    <div className={styles.bar}>
-      <button onClick={() => _onEmotionClick(Emotion.NEUTRAL)}>Neutral</button>
-      <button onClick={() => _onEmotionClick(Emotion.CONFUSED)}>Confused</button>
-      <button onClick={() => _onEmotionClick(Emotion.SAD)}>Sad</button>
-      <button onClick={() => _onEmotionClick(Emotion.AFRAID)}>Afraid</button>
-      <button onClick={() => _onEmotionClick(Emotion.EVIL)}>Evil</button>
-      <button onClick={() => _onEmotionClick(Emotion.SUSPICIOUS)}>Suspicious</button>
-      <button onClick={() => _onEmotionClick(Emotion.AMUSED)}>Amused</button>
-      <button onClick={() => _onEmotionClick(Emotion.HAPPY)}>Happy</button>
-      <button onClick={() => _onEmotionClick(Emotion.THINKING)}>Thinking</button>
-      <button onClick={() => _onEmotionClick(Emotion.ANGRY)}>Angry</button>
-      <button onClick={() => _onEmotionClick(Emotion.IRRITATED)}>Irritated</button>
-    </div>
-  );
+  return <Selector defaultOptionNo={0} label='Emotion' optionNames={optionNames} onChange={_onChange} />
 }
 
 export default EmotionSelector;

@@ -5,14 +5,15 @@ import {
   findAndMeasureOpaqueAreas,
   imageBitmapToImageData,
   loadImage
-} from "../common/imageUtil";
+} from "../rendering/imageUtil";
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 import IrisArea from "./IrisArea";
 import {Emotion} from "../events/emotions";
 import Topics from '../events/topics';
 import {subscribeEvent} from "../events/thePubSub";
-import {thePreRenderContext} from "../common/thePreRenderContext";
+import {thePreRenderContext} from "../rendering/thePreRenderContext";
 import LidLevel from "../events/lidLevels";
+import TweenedValue from "../animation/TweenedValue";
 
 type Emotional = {
   overlayBitmap:ImageBitmap,
@@ -43,12 +44,34 @@ type BaseOffsets = {
   lidsOffsetY:number
 }
 
+/*
+Lids first
+
+Requirements:
+* Blink event works as it currently does (smooth animation
+* Lid level event set target for lids
+* Lids will move to target at a limited speed
+* Acceleration/deceleration (easing)
+
+#2
+
+EyesComponentState {
+  lidLevel:TweenedValue
+  restingLidLevel:number
+  isBlinking:boolean
+}
+
+When receiving blink event - lidLevel.setTarget(closed eye) with callback to call lidLevel.setTarget(opened eye to resting lid level)
+When receiving Lid Level event - Set restingLidVel and call lidLevel.setTarget(new resting lid level)
+When receiving attention event - TBD
+
+ */
+
 type EyesComponentState = EyesBitmaps & {
   currentEmotion:Emotion,
   targetDx:number, targetDy:number,
   restingLidLevel:LidLevel,
-  isBlinking:boolean,
-  blinkStartTime:number,
+  lidLevel:TweenedValue,
   baseOffsets:BaseOffsets
 }
 
@@ -60,6 +83,7 @@ const Y_LIDS = 13*CY_EYES;
 const MIN_MASK_COVERAGE_FACTOR = .01;
 const MIN_IRIS_COVERAGE_FACTOR = 0;
 const BLINK_DURATION = 200;
+const LID_LEVEL_CHANGE_DURATION = 200;
 
 async function _imageToOverlayBitmap(image:HTMLImageElement, emotion:Emotion):Promise<ImageBitmap> {
   return createImageBitmap(image, X_EYES, Y_EMOTION_EYES+(emotion*CY_EYES), CX_EYES, CY_EYES);
@@ -160,18 +184,9 @@ function _initDataToBaseOffsets(eyesInitData:EyesInitData):BaseOffsets {
 }
 
 function _calcLidOpenOffsetAndUpdateState(eyesComponentState:EyesComponentState):number {
-  const { restingLidLevel, currentEmotion, emotionals } = eyesComponentState;
+  const { currentEmotion, emotionals, lidLevel } = eyesComponentState;
   const { lidTravelHeight } = emotionals[currentEmotion];
-  const _openAmountToOffset = (amount:number) => -(lidTravelHeight * amount);
-  
-  if (!eyesComponentState.isBlinking) return _openAmountToOffset(restingLidLevel);
-  const elapsed = Date.now() - eyesComponentState.blinkStartTime;
-  if (elapsed > BLINK_DURATION) {
-    eyesComponentState.isBlinking = false;
-    return _openAmountToOffset(restingLidLevel);
-  }
-  const openAmount = (1 - Math.sin((elapsed / BLINK_DURATION) * Math.PI)) * restingLidLevel;
-  return _openAmountToOffset(openAmount);
+  return -(lidTravelHeight * lidLevel.update());
 }
 
 async function _onLoad(initData:any):Promise<any> {
@@ -183,8 +198,7 @@ async function _onLoad(initData:any):Promise<any> {
     currentEmotion:Emotion.NEUTRAL,
     targetDx:0, targetDy:0,
     restingLidLevel:LidLevel.NORMAL,
-    isBlinking:false,
-    blinkStartTime:-1
+    lidLevel:new TweenedValue(LidLevel.NORMAL)
   };
   subscribeEvent(Topics.EMOTION, (event:any) => eyesComponentState.currentEmotion = event as Emotion);
   subscribeEvent(Topics.ATTENTION, (event:any) => {
@@ -192,12 +206,18 @@ async function _onLoad(initData:any):Promise<any> {
     eyesComponentState.targetDy = event.dy;
   });
   subscribeEvent(Topics.BLINK, () => {
-    if (!eyesComponentState.isBlinking) {
-      eyesComponentState.isBlinking = true;
-      eyesComponentState.blinkStartTime = Date.now();
+    if ( eyesComponentState.lidLevel.isComplete) {
+      eyesComponentState.lidLevel.setTarget(LidLevel.CLOSED, BLINK_DURATION/2, () => {
+        eyesComponentState.lidLevel.setTarget(eyesComponentState.restingLidLevel, BLINK_DURATION/2);
+      });
     }
   });
-  subscribeEvent(Topics.LID_LEVEL, (event:any) => eyesComponentState.restingLidLevel = event as LidLevel);
+  subscribeEvent(Topics.LID_LEVEL, (event:any) => {
+    const nextLidLevel = event as LidLevel;
+    if (nextLidLevel === eyesComponentState.restingLidLevel) return;
+    eyesComponentState.restingLidLevel = nextLidLevel;
+    eyesComponentState.lidLevel.setTarget(nextLidLevel, LID_LEVEL_CHANGE_DURATION);
+  });
   return eyesComponentState;
 }
 
@@ -215,9 +235,7 @@ function _onRender(componentState:any, context:CanvasRenderingContext2D, x:numbe
   const { currentEmotion, restingLidLevel, emotionals, backBitmap, leftIris, rightIris, lidsBitmap, baseOffsets, targetDx, targetDy } = componentState as EyesComponentState;
   const { backOffsetX, backOffsetY, lidsOffsetX, lidsOffsetY } = baseOffsets;
   const { innerMaskBitmap, overlayBitmap, leftIrisArea, rightIrisArea, lidTravelHeight } = emotionals[currentEmotion];
-
-  // TODO create a separate callback for updating value that affect rendering and move
-  // this there.
+  
   const lidsOpenOffset = _calcLidOpenOffsetAndUpdateState(componentState);
   
   preRenderContext.save();

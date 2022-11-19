@@ -1,4 +1,4 @@
-import {loadImage} from "../common/imageUtil";
+import {loadImage} from "../rendering/imageUtil";
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 
 export type HeadInitData = {
