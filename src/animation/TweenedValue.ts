@@ -2,6 +2,26 @@ const CLOSE_ENOUGH_TO_EQUAL = .000001;
 
 export interface ITweenCompleteCallback { ():void }
 
+interface IEasingFunc {
+  (time:number):number
+}
+
+enum EasingType {
+  NONE ,
+  CUBIC
+}
+const EASING_DEFAULT = EasingType.CUBIC;
+
+function _easeNone(t:number) { return t; }
+
+function _easeCubic(t:number) {
+  return (t >= .5)
+    ? 4 * (t-1) * (t-1) * (t-1) + 1
+    : 4 * t * t * t;
+}
+
+const easingTypeToFunc:IEasingFunc[] = [ _easeNone, _easeCubic ];
+
 class TweenedValue {
   private _value:number;
   private _fromValue:number;
@@ -11,12 +31,14 @@ class TweenedValue {
   private _tweenDuration:number;
   private _isComplete:boolean;
   private _onTweenComplete:ITweenCompleteCallback|null;
+  private _easingFunc:IEasingFunc;
   
-  constructor(value:number) {
+  constructor(value:number, easingType:EasingType = EASING_DEFAULT) {
     this._value = value;
     this._fromValue = this._toValue = this._tweenStartTime = this._tweenDuration = this._targetValueRange = 0;
     this._isComplete = true;
     this._onTweenComplete = null;
+    this._easingFunc = easingTypeToFunc[easingType];
   }
   
   update():number {
@@ -28,7 +50,8 @@ class TweenedValue {
       if (this._onTweenComplete) this._onTweenComplete();
       return this._value;
     }
-    this._value = this._fromValue + (elapsed / this._tweenDuration * this._targetValueRange);
+    const easedTime = this._easingFunc(elapsed / this._tweenDuration);
+    this._value = this._fromValue + (easedTime * this._targetValueRange);
     return this._value;
   }
   

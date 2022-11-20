@@ -244,7 +244,7 @@ function _onRender(componentState:any, context:CanvasRenderingContext2D, x:numbe
   const lidsOpenOffset = _calcLidOpenOffsetAndUpdateState(componentState);
   
   preRenderContext.save();
-  preRenderContext.clearRect(0,0, CX_EYES, CY_EYES)
+  preRenderContext.clearRect(0,0, 1024, 1024); // TODO: Replace with a separate offscreen canvas kept in canvas state.
   preRenderContext.globalCompositeOperation = 'source-over';
   preRenderContext.drawImage(innerMaskBitmap, 0, 0);
   preRenderContext.globalCompositeOperation = 'source-atop';

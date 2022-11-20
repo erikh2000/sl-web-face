@@ -7,7 +7,6 @@ import {loadEyesComponent} from "./eyes/eyes";
 import {loadHeadComponent} from "./head/head";
 import {loadMouthComponent} from "./mouth/mouth";
 import Canvas from "./rendering/Canvas";
-import PreRenderCanvas from "./rendering/PreRenderCanvas";
 import EmotionSelector from "./ui/EmotionSelector";
 import LidLevelSelector from "./ui/LidLevelSelector";
 import VisemeSelector from "./ui/VisemeSelector";
@@ -15,6 +14,7 @@ import VisemeSelector from "./ui/VisemeSelector";
 import styles from './App.module.css';
 
 import React, {useEffect} from 'react';
+import {createThePreRenderContext} from "./rendering/thePreRenderContext";
 
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
@@ -26,6 +26,7 @@ const blinkController = new BlinkController();
 const attentionController = new AttentionController();
 
 async function _init():Promise<void> {
+  createThePreRenderContext(MAX_PRERENDER_WIDTH, MAX_PRERENDER_HEIGHT);
   head = await loadHeadComponent({spriteSheetUrl:'/images/billy-face.png'});
   const mouth = await loadMouthComponent({spriteSheetUrl:'/images/billy-mouth.png'});
   const eyes = await loadEyesComponent({
@@ -68,7 +69,6 @@ function App() {
       <LidLevelSelector />
       <VisemeSelector />
       <Canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} isAnimated={true} onDraw={_onDrawCanvas} />
-      <PreRenderCanvas width={MAX_PRERENDER_WIDTH} height={MAX_PRERENDER_HEIGHT} />
     </div>
   );
 }

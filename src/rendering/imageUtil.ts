@@ -20,7 +20,7 @@ export async function loadImage(url:string):Promise<HTMLImageElement> {
 // support isn't there yet.
 export function imageBitmapToImageData(sourceBitmap:ImageBitmap):ImageData {
   const context = thePreRenderContext();
-  if (!context) throw Error('PreRenderCanvas must be rendered into DOM first.');
+  if (!context) throw Error('PreRenderCanvas must be created first.');
   context.clearRect(0, 0, sourceBitmap.width, sourceBitmap.height);
   context.drawImage(sourceBitmap, 0, 0);
   return context.getImageData(0, 0, sourceBitmap.width, sourceBitmap.height);
@@ -207,4 +207,37 @@ export function sliceImageData(sourceImageData:ImageData, sourceX:number, source
     readOffset += SOURCE_ROW_LEAP;
   }
   return new ImageData(destPixels, destWidth, destHeight);
+}
+
+const RGB_COUNT = 3, ALPHA_POS = 3;
+export function recolorPixels(rgbMatch:number[], matchTolerance:number, rgbReplace:number[], pixels:Uint8ClampedArray):Uint8ClampedArray {
+  const destPixels = new Uint8ClampedArray(pixels.length);
+  const stopOffset = pixels.length;
+  let readOffset = 0;
+  while(readOffset < stopOffset) {
+    let matchPercent = 0, i;
+    for(i = 0; i < RGB_COUNT; ++i) {
+      const diff = Math.abs(rgbMatch[i] - pixels[readOffset+1]);
+      if (diff > matchTolerance) break;
+      matchPercent += (1 - (diff / matchTolerance)) / RGB_COUNT;
+    }
+    if (i === RGB_COUNT) {
+     for(i = 0; i < RGB_COUNT; ++i) {
+       const oldColor = pixels[readOffset + i] * (1 - matchPercent);
+       const newColor = rgbReplace[i] * matchPercent;
+       destPixels[readOffset + i] = oldColor + newColor;
+     } 
+    }
+    destPixels[readOffset + ALPHA_POS] = pixels[readOffset + ALPHA_POS];
+    readOffset += PIXEL_SIZE;
+  }
+  return destPixels;
+}
+
+export async function recolorBitmap(imageBitmap:ImageBitmap, rgbMatch:number[], matchTolerance:number, rgbReplace:number[]):Promise<ImageBitmap> {
+  const imageData = await imageBitmapToImageData(imageBitmap);
+  const pixels = imageData.data;
+  const destPixels = recolorPixels(rgbMatch, matchTolerance, rgbReplace, pixels);
+  const recoloredImageData = new ImageData(destPixels, imageBitmap.width, imageBitmap.height);
+  return createImageBitmap(recoloredImageData);
 }
