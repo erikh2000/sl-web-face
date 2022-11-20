@@ -1,4 +1,3 @@
-import {thePreRenderContext} from "./thePreRenderContext";
 import {createCoordQueue, createCoordToProcessed, floodFill, floodFillAt} from "./floodFillUtil";
 
 export async function loadImage(url:string):Promise<HTMLImageElement> {
@@ -18,12 +17,10 @@ export async function loadImage(url:string):Promise<HTMLImageElement> {
 // see a better option. I don't want to draw to a canvas, but that seems to be the main 
 // way people are getting it done. I'd prefer to use an OfflineCanvas, at least, but browser
 // support isn't there yet.
-export function imageBitmapToImageData(sourceBitmap:ImageBitmap):ImageData {
-  const context = thePreRenderContext();
-  if (!context) throw Error('PreRenderCanvas must be created first.');
-  context.clearRect(0, 0, sourceBitmap.width, sourceBitmap.height);
-  context.drawImage(sourceBitmap, 0, 0);
-  return context.getImageData(0, 0, sourceBitmap.width, sourceBitmap.height);
+export function imageBitmapToImageData(sourceBitmap:ImageBitmap, preRenderContext:CanvasRenderingContext2D):ImageData {
+  preRenderContext.clearRect(0, 0, sourceBitmap.width, sourceBitmap.height);
+  preRenderContext.drawImage(sourceBitmap, 0, 0);
+  return preRenderContext.getImageData(0, 0, sourceBitmap.width, sourceBitmap.height);
 }
 
 const OPACITY_THRESHOLD = 127;
@@ -191,6 +188,7 @@ export function findAndMeasureOpaqueAreas(imageData:ImageData, minAreaCoverageFa
   return areas;
 }
 
+// This code works fine. It just wasn't being used, so I am going to delete it. TODO delete
 export function sliceImageData(sourceImageData:ImageData, sourceX:number, sourceY:number, destWidth:number, destHeight:number):ImageData {
   const sourcePixels = sourceImageData.data;
   const DEST_ROW_SIZE = destWidth * PIXEL_SIZE;
@@ -234,8 +232,8 @@ export function recolorPixels(rgbMatch:number[], matchTolerance:number, rgbRepla
   return destPixels;
 }
 
-export async function recolorBitmap(imageBitmap:ImageBitmap, rgbMatch:number[], matchTolerance:number, rgbReplace:number[]):Promise<ImageBitmap> {
-  const imageData = await imageBitmapToImageData(imageBitmap);
+export async function recolorBitmap(imageBitmap:ImageBitmap, rgbMatch:number[], matchTolerance:number, rgbReplace:number[], preRenderContext:CanvasRenderingContext2D):Promise<ImageBitmap> {
+  const imageData = await imageBitmapToImageData(imageBitmap, preRenderContext);
   const pixels = imageData.data;
   const destPixels = recolorPixels(rgbMatch, matchTolerance, rgbReplace, pixels);
   const recoloredImageData = new ImageData(destPixels, imageBitmap.width, imageBitmap.height);

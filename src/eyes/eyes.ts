@@ -11,7 +11,7 @@ import IrisArea from "./IrisArea";
 import {Emotion} from "../events/emotions";
 import Topics from '../events/topics';
 import {subscribeEvent} from "../events/thePubSub";
-import {thePreRenderContext} from "../rendering/thePreRenderContext";
+import {clearContext, createOffScreenContext} from "../rendering/canvasUtil";
 import LidLevel from "../events/lidLevels";
 import TweenedValue from "../animation/TweenedValue";
 
@@ -51,7 +51,8 @@ type EyesComponentState = EyesBitmaps & {
   attentionDx:number, attentionDy:number,
   restingLidLevel:LidLevel,
   lidLevel:TweenedValue,
-  baseOffsets:BaseOffsets
+  baseOffsets:BaseOffsets,
+  preRenderContext:CanvasRenderingContext2D
 }
 
 const X_EYES = 0, CX_EYES = 256, CY_EYES = 128;
@@ -69,9 +70,9 @@ async function _imageToOverlayBitmap(image:HTMLImageElement, emotion:Emotion):Pr
   return createImageBitmap(image, X_EYES, Y_EMOTION_EYES+(emotion*CY_EYES), CX_EYES, CY_EYES);
 }
 
-async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion):Promise<Emotional> {
+async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion, preRenderContext:CanvasRenderingContext2D):Promise<Emotional> {
   const overlayBitmap = await _imageToOverlayBitmap(image, emotion);
-  const overlayImageData = await imageBitmapToImageData(overlayBitmap);
+  const overlayImageData = await imageBitmapToImageData(overlayBitmap, preRenderContext);
   const innerMaskImageData = createInnerAlphaMask(overlayImageData);
   const innerMaskAreas = findAndMeasureOpaqueAreas(innerMaskImageData, MIN_MASK_COVERAGE_FACTOR, AreaMeasurementFlags.FULLY_OPAQUE | AreaMeasurementFlags.DIMENSIONS);
   if (innerMaskAreas.length < 2) throw Error(`Could not find 2 iris areas for emotion #${emotion}.`);
@@ -91,10 +92,10 @@ async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion):P
   } as Emotional;
 }
 
-async function _generateEmotionals(image:HTMLImageElement):Promise<Emotional[]> {
+async function _generateEmotionals(image:HTMLImageElement, preRenderContext:CanvasRenderingContext2D):Promise<Emotional[]> {
   const promises:Promise<Emotional>[] = [];
   for(let emotionI = 0; emotionI < Emotion.COUNT; ++emotionI) {
-    promises.push(_generateEmotionalData(image, emotionI));
+    promises.push(_generateEmotionalData(image, emotionI, preRenderContext));
   }
   return await Promise.all(promises);
 }
@@ -103,9 +104,9 @@ async function _imageToBackBitmap(image:HTMLImageElement):Promise<ImageBitmap> {
   return createImageBitmap(image, X_EYES, Y_BACK, CX_EYES, CY_EYES);
 }
 
-async function _imageToIrisesImageData(image:HTMLImageElement):Promise<ImageData> {
+async function _imageToIrisesImageData(image:HTMLImageElement, preRenderContext:CanvasRenderingContext2D):Promise<ImageData> {
   const irisesImageBitmap = await createImageBitmap(image, X_EYES, Y_IRISES, CX_EYES, CY_EYES);
-  return imageBitmapToImageData(irisesImageBitmap);
+  return imageBitmapToImageData(irisesImageBitmap, preRenderContext);
 }
 
 async function _createIrisInfo(irisesImageData:ImageData, irisArea:AreaMeasurements):Promise<IrisInfo> {
@@ -118,8 +119,8 @@ async function _createIrisInfo(irisesImageData:ImageData, irisArea:AreaMeasureme
   }
 }
 
-async function _imageToLeftAndRightIrises(image:HTMLImageElement):Promise<IrisInfo[]> {
-  const irisesImageData = await _imageToIrisesImageData(image);
+async function _imageToLeftAndRightIrises(image:HTMLImageElement, preRenderContext:CanvasRenderingContext2D):Promise<IrisInfo[]> {
+  const irisesImageData = await _imageToIrisesImageData(image, preRenderContext);
   let irisAreas = findAndMeasureOpaqueAreas(irisesImageData, MIN_IRIS_COVERAGE_FACTOR, AreaMeasurementFlags.DIMENSIONS)
   if (irisAreas.length < 2) throw Error('Could not find 2 irises in spritesheet.');
   if (irisAreas.length > 2) {
@@ -135,11 +136,11 @@ async function _imageToLidsBitmap(image:HTMLImageElement):Promise<ImageBitmap> {
   return createImageBitmap(image, X_EYES, Y_LIDS, CX_EYES, CY_EYES);
 }
 
-async function _loadBitmaps(spriteSheetUrl:string):Promise<EyesBitmaps> {
+async function _loadBitmaps(spriteSheetUrl:string, preRenderContext:CanvasRenderingContext2D):Promise<EyesBitmaps> {
   const image = await loadImage(spriteSheetUrl);
-  const [leftIris, rightIris] = await _imageToLeftAndRightIrises(image);
+  const [leftIris, rightIris] = await _imageToLeftAndRightIrises(image, preRenderContext);
   return {
-    emotionals: await _generateEmotionals(image),
+    emotionals: await _generateEmotionals(image, preRenderContext),
     backBitmap: await _imageToBackBitmap(image),
     leftIris, rightIris,
     lidsBitmap: await _imageToLidsBitmap(image)
@@ -190,8 +191,9 @@ function _calcIrisTargetAndUpdateState(eyesComponentState:EyesComponentState) {
 }
 
 async function _onLoad(initData:any):Promise<any> {
+  const preRenderContext = createOffScreenContext(CX_EYES, CY_EYES);
   const { spriteSheetUrl } = initData as EyesInitData;
-  const { emotionals, backBitmap, leftIris, rightIris, lidsBitmap } = await _loadBitmaps(spriteSheetUrl);
+  const { emotionals, backBitmap, leftIris, rightIris, lidsBitmap } = await _loadBitmaps(spriteSheetUrl, preRenderContext);
   const currentEmotion = Emotion.NEUTRAL;
   const restingLidLevel = LidLevel.NORMAL;
   const attentionDx = 0, attentionDy = 0;
@@ -202,7 +204,8 @@ async function _onLoad(initData:any):Promise<any> {
     currentEmotion,
     attentionDx, attentionDy,
     restingLidLevel,
-    lidLevel:new TweenedValue(LidLevel.NORMAL)
+    lidLevel:new TweenedValue(LidLevel.NORMAL),
+    preRenderContext
   };
   _calcIrisTargetAndUpdateState(eyesComponentState);
   
@@ -235,16 +238,14 @@ function _drawIrisesAndUpdate(context:CanvasRenderingContext2D, leftIris:IrisInf
 }
   
 function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number) {
-  const preRenderContext = thePreRenderContext();
-  if (!preRenderContext) return;
-  const { currentEmotion, emotionals, backBitmap, lidsBitmap, baseOffsets, leftIris, rightIris } = componentState as EyesComponentState;
+  const { preRenderContext, currentEmotion, emotionals, backBitmap, lidsBitmap, baseOffsets, leftIris, rightIris } = componentState as EyesComponentState;
   const { backOffsetX, backOffsetY, lidsOffsetX, lidsOffsetY } = baseOffsets;
   const { innerMaskBitmap, overlayBitmap } = emotionals[currentEmotion];
   
   const lidsOpenOffset = _calcLidOpenOffsetAndUpdateState(componentState);
-  
+
+  clearContext(preRenderContext);
   preRenderContext.save();
-  preRenderContext.clearRect(0,0, 1024, 1024); // TODO: Replace with a separate offscreen canvas kept in canvas state.
   preRenderContext.globalCompositeOperation = 'source-over';
   preRenderContext.drawImage(innerMaskBitmap, 0, 0);
   preRenderContext.globalCompositeOperation = 'source-atop';

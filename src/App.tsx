@@ -14,11 +14,9 @@ import VisemeSelector from "./ui/VisemeSelector";
 import styles from './App.module.css';
 
 import React, {useEffect} from 'react';
-import {createThePreRenderContext} from "./rendering/thePreRenderContext";
 
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
-const MAX_PRERENDER_WIDTH = 1024, MAX_PRERENDER_HEIGHT = 1024;
 
 let head:CanvasComponent|null = null;
 let isInitialized:boolean = false;
@@ -26,7 +24,6 @@ const blinkController = new BlinkController();
 const attentionController = new AttentionController();
 
 async function _init():Promise<void> {
-  createThePreRenderContext(MAX_PRERENDER_WIDTH, MAX_PRERENDER_HEIGHT);
   head = await loadHeadComponent({spriteSheetUrl:'/images/billy-face.png'});
   const mouth = await loadMouthComponent({spriteSheetUrl:'/images/billy-mouth.png'});
   const eyes = await loadEyesComponent({

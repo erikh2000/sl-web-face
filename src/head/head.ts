@@ -1,6 +1,5 @@
-import {imageBitmapToImageData, loadImage, recolorBitmap, recolorPixels} from "../rendering/imageUtil";
+import {loadImage, recolorBitmap, recolorPixels} from "../rendering/imageUtil";
 import CanvasComponent from "../canvasComponent/CanvasComponent";
-import {thePreRenderContext} from "../rendering/thePreRenderContext";
 
 export type HeadInitData = {
   spriteSheetUrl:string
