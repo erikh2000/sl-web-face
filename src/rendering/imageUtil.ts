@@ -187,36 +187,3 @@ export function findAndMeasureOpaqueAreas(imageData:ImageData, minAreaCoverageFa
   }
   return areas;
 }
-
-const RGB_COUNT = 3, ALPHA_POS = 3;
-export function recolorPixels(rgbMatch:number[], matchTolerance:number, rgbReplace:number[], pixels:Uint8ClampedArray):Uint8ClampedArray {
-  const destPixels = new Uint8ClampedArray(pixels.length);
-  const stopOffset = pixels.length;
-  let readOffset = 0;
-  while(readOffset < stopOffset) {
-    let matchPercent = 0, i;
-    for(i = 0; i < RGB_COUNT; ++i) {
-      const diff = Math.abs(rgbMatch[i] - pixels[readOffset+1]);
-      if (diff > matchTolerance) break;
-      matchPercent += (1 - (diff / matchTolerance)) / RGB_COUNT;
-    }
-    if (i === RGB_COUNT) {
-     for(i = 0; i < RGB_COUNT; ++i) {
-       const oldColor = pixels[readOffset + i] * (1 - matchPercent);
-       const newColor = rgbReplace[i] * matchPercent;
-       destPixels[readOffset + i] = oldColor + newColor;
-     } 
-    }
-    destPixels[readOffset + ALPHA_POS] = pixels[readOffset + ALPHA_POS];
-    readOffset += PIXEL_SIZE;
-  }
-  return destPixels;
-}
-
-export async function recolorBitmap(imageBitmap:ImageBitmap, rgbMatch:number[], matchTolerance:number, rgbReplace:number[], preRenderContext:CanvasRenderingContext2D):Promise<ImageBitmap> {
-  const imageData = await imageBitmapToImageData(imageBitmap, preRenderContext);
-  const pixels = imageData.data;
-  const destPixels = recolorPixels(rgbMatch, matchTolerance, rgbReplace, pixels);
-  const recoloredImageData = new ImageData(destPixels, imageBitmap.width, imageBitmap.height);
-  return createImageBitmap(recoloredImageData);
-}
