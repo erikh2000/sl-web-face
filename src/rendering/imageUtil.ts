@@ -188,25 +188,6 @@ export function findAndMeasureOpaqueAreas(imageData:ImageData, minAreaCoverageFa
   return areas;
 }
 
-// This code works fine. It just wasn't being used, so I am going to delete it. TODO delete
-export function sliceImageData(sourceImageData:ImageData, sourceX:number, sourceY:number, destWidth:number, destHeight:number):ImageData {
-  const sourcePixels = sourceImageData.data;
-  const DEST_ROW_SIZE = destWidth * PIXEL_SIZE;
-  const SOURCE_ROW_SIZE = sourceImageData.width * PIXEL_SIZE;
-  const SOURCE_ROW_LEAP = SOURCE_ROW_SIZE - DEST_ROW_SIZE;
-  const destPixels = new Uint8ClampedArray(destHeight * DEST_ROW_SIZE);
-  let readOffset = _getPixelOffset(destWidth, sourceX, sourceY);
-  let writeOffset = 0; 
-  for(let rowI = 0; rowI < destHeight; ++rowI) {
-    const stopReadOffset = readOffset + DEST_ROW_SIZE;
-    while(readOffset !== stopReadOffset) {
-      destPixels[writeOffset++] = sourcePixels[readOffset++];
-    }
-    readOffset += SOURCE_ROW_LEAP;
-  }
-  return new ImageData(destPixels, destWidth, destHeight);
-}
-
 const RGB_COUNT = 3, ALPHA_POS = 3;
 export function recolorPixels(rgbMatch:number[], matchTolerance:number, rgbReplace:number[], pixels:Uint8ClampedArray):Uint8ClampedArray {
   const destPixels = new Uint8ClampedArray(pixels.length);
