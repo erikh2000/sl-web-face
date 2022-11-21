@@ -29,7 +29,6 @@ async function _init():Promise<void> {
   const eyes = await loadEyesComponent({
     spriteSheetUrl:'/images/billy-eyes.png',
     backOffsetX: -4,
-    irisesOffsetX: -2,
     lidsOffsetY: -2,
     lidsOffsetX: 4,
   });

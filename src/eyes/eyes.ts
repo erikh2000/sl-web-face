@@ -14,6 +14,8 @@ import {subscribeEvent} from "../events/thePubSub";
 import {clearContext, createOffScreenContext} from "../rendering/canvasUtil";
 import LidLevel from "../events/lidLevels";
 import TweenedValue from "../animation/TweenedValue";
+import {recolorBitmapByProfile} from "../rendering/recolorUtil";
+import {BLACK_SKIN_PROFILE} from "../rendering/RecolorProfile";
 
 type Emotional = {
   overlayBitmap:ImageBitmap,
@@ -71,7 +73,8 @@ async function _imageToOverlayBitmap(image:HTMLImageElement, emotion:Emotion):Pr
 }
 
 async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion, preRenderContext:CanvasRenderingContext2D):Promise<Emotional> {
-  const overlayBitmap = await _imageToOverlayBitmap(image, emotion);
+  let overlayBitmap = await _imageToOverlayBitmap(image, emotion);
+  overlayBitmap = await recolorBitmapByProfile(overlayBitmap, BLACK_SKIN_PROFILE, preRenderContext);
   const overlayImageData = await imageBitmapToImageData(overlayBitmap, preRenderContext);
   const innerMaskImageData = createInnerAlphaMask(overlayImageData);
   const innerMaskAreas = findAndMeasureOpaqueAreas(innerMaskImageData, MIN_MASK_COVERAGE_FACTOR, AreaMeasurementFlags.FULLY_OPAQUE | AreaMeasurementFlags.DIMENSIONS);
@@ -133,17 +136,19 @@ async function _imageToLeftAndRightIrises(image:HTMLImageElement, preRenderConte
 }
 
 async function _imageToLidsBitmap(image:HTMLImageElement):Promise<ImageBitmap> {
-  return createImageBitmap(image, X_EYES, Y_LIDS, CX_EYES, CY_EYES);
+  return await createImageBitmap(image, X_EYES, Y_LIDS, CX_EYES, CY_EYES);
 }
 
 async function _loadBitmaps(spriteSheetUrl:string, preRenderContext:CanvasRenderingContext2D):Promise<EyesBitmaps> {
   const image = await loadImage(spriteSheetUrl);
   const [leftIris, rightIris] = await _imageToLeftAndRightIrises(image, preRenderContext);
+  let lidsBitmap = await _imageToLidsBitmap(image);
+  lidsBitmap = await recolorBitmapByProfile(lidsBitmap, BLACK_SKIN_PROFILE, preRenderContext);
   return {
     emotionals: await _generateEmotionals(image, preRenderContext),
     backBitmap: await _imageToBackBitmap(image),
     leftIris, rightIris,
-    lidsBitmap: await _imageToLidsBitmap(image)
+    lidsBitmap
   } as EyesBitmaps;
 }
 
@@ -151,8 +156,6 @@ export type EyesInitData = {
   spriteSheetUrl:string,
   backOffsetX?:number,
   backOffsetY?:number,
-  irisesOffsetX?:number,
-  irisesOffsetY?:number,
   lidsOffsetX?:number,
   lidsOffsetY?:number
 }
