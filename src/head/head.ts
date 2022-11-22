@@ -2,7 +2,7 @@ import {loadImage} from "../rendering/imageUtil";
 import {recolorBitmapByProfile} from "../rendering/recolorUtil";
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 import {createOffScreenContext} from "../rendering/canvasUtil";
-import {RecolorProfile, NO_REPLACE, BLACK_SKIN_PROFILE} from "../rendering/RecolorProfile";
+import {BLACK_SKIN_PROFILE} from "../rendering/RecolorProfile";
 
 export type HeadInitData = {
   spriteSheetUrl:string

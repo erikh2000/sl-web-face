@@ -2,7 +2,6 @@ import {Emotion} from "../events/emotions";
 import Topics from '../events/topics';
 import {publishEvent} from "../events/thePubSub";
 import Selector from "./Selector";
-import styles from './EmotionSelector.module.css';
 
 const optionNames = ['Neutral', 'Confused', 'Sad', 'Afraid', 'Evil', 'Suspicious', 
   'Amused', 'Happy', 'Thinking', 'Angry', 'Irritated'];

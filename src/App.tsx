@@ -3,9 +3,6 @@ import {publishEvent} from "./events/thePubSub";
 import Topics from "./events/topics";
 import AttentionController from "./eyes/AttentionController";
 import BlinkController from "./eyes/BlinkController";
-import {loadEyesComponent} from "./eyes/eyes";
-import {loadHeadComponent} from "./head/head";
-import {loadMouthComponent} from "./mouth/mouth";
 import Canvas from "./rendering/Canvas";
 import EmotionSelector from "./ui/EmotionSelector";
 import LidLevelSelector from "./ui/LidLevelSelector";
@@ -14,6 +11,7 @@ import VisemeSelector from "./ui/VisemeSelector";
 import styles from './App.module.css';
 
 import React, {useEffect} from 'react';
+import {loadComponentFromPartUrl} from "./canvasComponent/partLoaderUtil";
 
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
@@ -24,14 +22,9 @@ const blinkController = new BlinkController();
 const attentionController = new AttentionController();
 
 async function _init():Promise<void> {
-  head = await loadHeadComponent({spriteSheetUrl:'/images/billy-face.png'});
-  const mouth = await loadMouthComponent({spriteSheetUrl:'/images/billy-mouth.png'});
-  const eyes = await loadEyesComponent({
-    spriteSheetUrl:'/images/billy-eyes.png',
-    backOffsetX: -4,
-    lidsOffsetY: -2,
-    lidsOffsetX: 4,
-  });
+  head = await loadComponentFromPartUrl('/parts/billy-head.yml');
+  const mouth = await loadComponentFromPartUrl('/parts/billy-mouth.yml');
+  const eyes = await loadComponentFromPartUrl('/parts/billy-eyes.yml');
   head.addChildAt(mouth, 20, 290);
   head.addChildAt(eyes, 25, 150);
   head.offsetX = 200;
