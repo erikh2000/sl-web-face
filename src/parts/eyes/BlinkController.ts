@@ -1,5 +1,5 @@
-import { publishEvent } from "../events/thePubSub";
-import Topics from "../events/topics";
+import { publishEvent } from "../../events/thePubSub";
+import Topics from "../../events/topics";
 
 const BLINK_INTERVAL_RANGE = 5000;
 const BLINK_INTERVAL_MINIMUM = 500;

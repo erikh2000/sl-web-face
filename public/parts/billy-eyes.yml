@@ -1,6 +1,5 @@
 partType: eyes
-spriteSheetUrl: /parts/billy-eyes.png
 backOffsetX: -4
 backOffsetY: 0
-lidsOffsetX: -2
-lidsOffsetY: 4
+lidsOffsetX: 4
+lidsOffsetY: 0

@@ -1,8 +1,8 @@
 import CanvasComponent from "./canvasComponent/CanvasComponent";
 import {publishEvent} from "./events/thePubSub";
 import Topics from "./events/topics";
-import AttentionController from "./eyes/AttentionController";
-import BlinkController from "./eyes/BlinkController";
+import AttentionController from "./parts/eyes/AttentionController";
+import BlinkController from "./parts/eyes/BlinkController";
 import Canvas from "./rendering/Canvas";
 import EmotionSelector from "./ui/EmotionSelector";
 import LidLevelSelector from "./ui/LidLevelSelector";
@@ -11,7 +11,7 @@ import VisemeSelector from "./ui/VisemeSelector";
 import styles from './App.module.css';
 
 import React, {useEffect} from 'react';
-import {loadComponentFromPartUrl} from "./canvasComponent/partLoaderUtil";
+import {loadComponentFromPartUrl} from "./parts/partLoaderUtil";
 
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;

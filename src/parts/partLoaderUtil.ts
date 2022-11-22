@@ -1,8 +1,8 @@
 import { parse } from 'yaml';
-import CanvasComponent from "./CanvasComponent";
-import {loadEyesComponent} from "../eyes/eyes";
-import {loadHeadComponent} from "../head/head";
-import {loadMouthComponent} from "../mouth/mouth";
+import CanvasComponent from "../canvasComponent/CanvasComponent";
+import {loadEyesComponent} from "./eyes/eyes";
+import {loadHeadComponent} from "./head/head";
+import {loadMouthComponent} from "./mouth/mouth";
 
 function _loadComponentInitData(text:string):any {
   const object:any = parse(text);
@@ -32,8 +32,15 @@ async function _loadCanvasComponentForPartType(partType:string, initData:any):Pr
   return loaderFunc(initData);
 }
 
+function _concatDefaultSpriteSheetUrl(partUrl:string) {
+  const extensionPos = partUrl.lastIndexOf('.');
+  const baseUrl = extensionPos === -1 ? partUrl : partUrl.substring(0, extensionPos);
+  return `${baseUrl}.png`;
+}
+
 export async function loadComponentFromPartUrl(partUrl:string):Promise<CanvasComponent> {
   const initData = await _loadComponentInitDataFromUrl(partUrl);
-  const { partType } = initData;
+  const { partType, spriteSheetUrl } = initData;
+  if (!spriteSheetUrl) initData.spriteSheetUrl = _concatDefaultSpriteSheetUrl(partUrl);
   return _loadCanvasComponentForPartType(partType, initData);
 }

@@ -5,17 +5,17 @@ import {
   findAndMeasureOpaqueAreas,
   imageBitmapToImageData,
   loadImage
-} from "../rendering/imageUtil";
-import CanvasComponent from "../canvasComponent/CanvasComponent";
+} from "../../rendering/imageUtil";
+import CanvasComponent from "../../canvasComponent/CanvasComponent";
 import IrisArea from "./IrisArea";
-import {Emotion} from "../events/emotions";
-import Topics from '../events/topics';
-import {subscribeEvent} from "../events/thePubSub";
-import {clearContext, createOffScreenContext} from "../rendering/canvasUtil";
-import LidLevel from "../events/lidLevels";
-import TweenedValue from "../animation/TweenedValue";
-import {recolorBitmapByProfile} from "../rendering/recolorUtil";
-import {BLACK_SKIN_PROFILE} from "../rendering/RecolorProfile";
+import {Emotion} from "../../events/emotions";
+import Topics from '../../events/topics';
+import {subscribeEvent} from "../../events/thePubSub";
+import {clearContext, createOffScreenContext} from "../../rendering/canvasUtil";
+import LidLevel from "../../events/lidLevels";
+import TweenedValue from "../../animation/TweenedValue";
+import {recolorBitmapByProfile} from "../../rendering/recolorUtil";
+import {BLACK_SKIN_PROFILE} from "../../rendering/RecolorProfile";
 
 type Emotional = {
   overlayBitmap:ImageBitmap,

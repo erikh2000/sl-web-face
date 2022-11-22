@@ -1,7 +1,7 @@
-import { publishEvent, subscribeEvent } from "../events/thePubSub";
-import Topics from "../events/topics";
-import LidLevel from "../events/lidLevels";
-import {Emotion} from "../events/emotions";
+import { publishEvent, subscribeEvent } from "../../events/thePubSub";
+import Topics from "../../events/topics";
+import LidLevel from "../../events/lidLevels";
+import {Emotion} from "../../events/emotions";
 
 const ATTENTION_INTERVAL_RANGE = 10000;
 const ATTENTION_INTERVAL_MINIMUM = 1000;
