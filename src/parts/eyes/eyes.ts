@@ -15,7 +15,7 @@ import {clearContext, createOffScreenContext} from "../../rendering/canvasUtil";
 import LidLevel from "../../events/lidLevels";
 import TweenedValue from "../../animation/TweenedValue";
 import {recolorBitmapByProfile} from "../../rendering/recolorUtil";
-import {BLACK_SKIN_PROFILE} from "../../rendering/RecolorProfile";
+import {RecolorProfile} from "../../rendering/RecolorProfile";
 
 type Emotional = {
   overlayBitmap:ImageBitmap,
@@ -72,9 +72,9 @@ async function _imageToOverlayBitmap(image:HTMLImageElement, emotion:Emotion):Pr
   return createImageBitmap(image, X_EYES, Y_EMOTION_EYES+(emotion*CY_EYES), CX_EYES, CY_EYES);
 }
 
-async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion, preRenderContext:CanvasRenderingContext2D):Promise<Emotional> {
+async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion, preRenderContext:CanvasRenderingContext2D, recolorProfile:RecolorProfile|null):Promise<Emotional> {
   let overlayBitmap = await _imageToOverlayBitmap(image, emotion);
-  overlayBitmap = await recolorBitmapByProfile(overlayBitmap, BLACK_SKIN_PROFILE, preRenderContext);
+  if (recolorProfile) overlayBitmap = await recolorBitmapByProfile(overlayBitmap, recolorProfile, preRenderContext);
   const overlayImageData = await imageBitmapToImageData(overlayBitmap, preRenderContext);
   const innerMaskImageData = createInnerAlphaMask(overlayImageData);
   const innerMaskAreas = findAndMeasureOpaqueAreas(innerMaskImageData, MIN_MASK_COVERAGE_FACTOR, AreaMeasurementFlags.FULLY_OPAQUE | AreaMeasurementFlags.DIMENSIONS);
@@ -95,10 +95,10 @@ async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion, p
   } as Emotional;
 }
 
-async function _generateEmotionals(image:HTMLImageElement, preRenderContext:CanvasRenderingContext2D):Promise<Emotional[]> {
+async function _generateEmotionals(image:HTMLImageElement, preRenderContext:CanvasRenderingContext2D, recolorProfile:RecolorProfile|null):Promise<Emotional[]> {
   const promises:Promise<Emotional>[] = [];
   for(let emotionI = 0; emotionI < Emotion.COUNT; ++emotionI) {
-    promises.push(_generateEmotionalData(image, emotionI, preRenderContext));
+    promises.push(_generateEmotionalData(image, emotionI, preRenderContext, recolorProfile));
   }
   return await Promise.all(promises);
 }
@@ -139,13 +139,13 @@ async function _imageToLidsBitmap(image:HTMLImageElement):Promise<ImageBitmap> {
   return await createImageBitmap(image, X_EYES, Y_LIDS, CX_EYES, CY_EYES);
 }
 
-async function _loadBitmaps(spriteSheetUrl:string, preRenderContext:CanvasRenderingContext2D):Promise<EyesBitmaps> {
+async function _loadBitmaps(spriteSheetUrl:string, preRenderContext:CanvasRenderingContext2D, recolorProfile:RecolorProfile|null):Promise<EyesBitmaps> {
   const image = await loadImage(spriteSheetUrl);
   const [leftIris, rightIris] = await _imageToLeftAndRightIrises(image, preRenderContext);
   let lidsBitmap = await _imageToLidsBitmap(image);
-  lidsBitmap = await recolorBitmapByProfile(lidsBitmap, BLACK_SKIN_PROFILE, preRenderContext);
+  if (recolorProfile) lidsBitmap = await recolorBitmapByProfile(lidsBitmap, recolorProfile, preRenderContext);
   return {
-    emotionals: await _generateEmotionals(image, preRenderContext),
+    emotionals: await _generateEmotionals(image, preRenderContext, recolorProfile),
     backBitmap: await _imageToBackBitmap(image),
     leftIris, rightIris,
     lidsBitmap
@@ -154,6 +154,7 @@ async function _loadBitmaps(spriteSheetUrl:string, preRenderContext:CanvasRender
 
 export type EyesInitData = {
   spriteSheetUrl:string,
+  recolorProfile:RecolorProfile|null,
   backOffsetX?:number,
   backOffsetY?:number,
   lidsOffsetX?:number,
@@ -195,8 +196,8 @@ function _calcIrisTargetAndUpdateState(eyesComponentState:EyesComponentState) {
 
 async function _onLoad(initData:any):Promise<any> {
   const preRenderContext = createOffScreenContext(CX_EYES, CY_EYES);
-  const { spriteSheetUrl } = initData as EyesInitData;
-  const { emotionals, backBitmap, leftIris, rightIris, lidsBitmap } = await _loadBitmaps(spriteSheetUrl, preRenderContext);
+  const { spriteSheetUrl, recolorProfile } = initData as EyesInitData;
+  const { emotionals, backBitmap, leftIris, rightIris, lidsBitmap } = await _loadBitmaps(spriteSheetUrl, preRenderContext, recolorProfile);
   const currentEmotion = Emotion.NEUTRAL;
   const restingLidLevel = LidLevel.NORMAL;
   const attentionDx = 0, attentionDy = 0;

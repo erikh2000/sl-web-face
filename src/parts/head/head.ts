@@ -2,10 +2,11 @@ import {loadImage} from "../../rendering/imageUtil";
 import {recolorBitmapByProfile} from "../../rendering/recolorUtil";
 import CanvasComponent from "../../canvasComponent/CanvasComponent";
 import {createOffScreenContext} from "../../rendering/canvasUtil";
-import {BLACK_SKIN_PROFILE} from "../../rendering/RecolorProfile";
+import {RecolorProfile} from "../../rendering/RecolorProfile";
 
 export type HeadInitData = {
-  spriteSheetUrl:string
+  spriteSheetUrl:string,
+  recolorProfile:RecolorProfile|null
 }
 
 type HeadComponentState = {
@@ -19,11 +20,12 @@ async function _loadHeadBitmap(spriteSheetUrl:string):Promise<ImageBitmap> {
 }
 
 async function _onLoad(initData:any):Promise<any> {
-  const { spriteSheetUrl } = initData as HeadInitData;
-  const originalHeadBitmap = await _loadHeadBitmap(spriteSheetUrl);
+  const { spriteSheetUrl, recolorProfile } = initData as HeadInitData;
+  let originalHeadBitmap = await _loadHeadBitmap(spriteSheetUrl);
+  if (!recolorProfile) return { headBitmap:originalHeadBitmap };
+  
   const preRenderContext = createOffScreenContext(originalHeadBitmap.width, originalHeadBitmap.height);
-  const headBitmap = await recolorBitmapByProfile(originalHeadBitmap, BLACK_SKIN_PROFILE, preRenderContext);
-  return { headBitmap };
+  return { headBitmap: await recolorBitmapByProfile(originalHeadBitmap, recolorProfile, preRenderContext) };
 }
 
 function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number) {

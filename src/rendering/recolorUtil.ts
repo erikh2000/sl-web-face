@@ -1,52 +1,31 @@
 import {imageBitmapToImageData} from "./imageUtil";
-import {NO_REPLACE, RecolorInstruction, RecolorProfile} from "./RecolorProfile";
+import {RecolorProfile} from "./RecolorProfile";
+import {SkinTone, skinToneToName} from "../faces/SkinTone";
+import {skinToneToRecolorProfile} from "./defaultRecolorProfiles";
+import {adjustContrast, hsvToRgb, rgbToHsv} from "./colorUtil";
 
-const RGB_COUNT = 3;
-const ALPHA_POS = 3;
-const BYTE_MATCH_SHARE = 1 / RGB_COUNT;
 const PIXEL_SIZE = 4;
 
-function _findInstructionMatch(instructions:RecolorInstruction[], pixels:Uint8ClampedArray, readOffset:number):[RecolorInstruction|null,number] {
-  let bestInstruction:RecolorInstruction|null = null, bestMatchPercent = -1;
-  instructions.forEach(instruction => {
-    const { rgbMatch, matchTolerance } = instruction;
-    let matchPercent = 0, i;
-    for (i = 0; i < RGB_COUNT; ++i) {
-      const diff = Math.abs(pixels[readOffset + i] - rgbMatch[i]);
-      if (diff > matchTolerance) break;
-      matchPercent += (matchTolerance === 0)
-        ? BYTE_MATCH_SHARE
-        : (1 - (diff / matchTolerance)) * BYTE_MATCH_SHARE;
-    }
-    if (i === RGB_COUNT) {
-      if (matchPercent > bestMatchPercent) {
-        bestInstruction = instruction;
-        bestMatchPercent = matchPercent;
-      }
-    }
-  });
-  return [bestInstruction, bestMatchPercent]
-}
-
-function _recolorPixels(instructions:RecolorInstruction[], pixels:Uint8ClampedArray):Uint8ClampedArray {
+function _recolorPixels(pixels:Uint8ClampedArray, recolorProfile:RecolorProfile):Uint8ClampedArray {
+  const { adjustHueDegrees, adjustSaturationPercent, adjustValuePercent, adjustContrastPercent } = recolorProfile;
+  const adjustContrastBrightnessThreshold = recolorProfile.adjustContrastBrightnessThreshold === null ? 0 : recolorProfile.adjustContrastBrightnessThreshold;
   const destPixels = new Uint8ClampedArray(pixels.length);
   const stopOffset = pixels.length;
   let readOffset = 0;
+  
   while(readOffset < stopOffset) {
-    const [instruction, matchPercent] = _findInstructionMatch(instructions, pixels, readOffset);
-    if (instruction && instruction.rgbReplace !== NO_REPLACE) {
-      const { useSmoothing, rgbReplace } = instruction;
-      for(let i = 0; i < RGB_COUNT; ++i) {
-        const oldColorByte = useSmoothing ? pixels[readOffset + i] * (1 - matchPercent) : 0;
-        const newColorByte = useSmoothing ? rgbReplace[i] * matchPercent : rgbReplace[i];
-        destPixels[readOffset + i] = oldColorByte + newColorByte;
-      }
-      destPixels[readOffset + ALPHA_POS] = pixels[readOffset + ALPHA_POS];
-    } else {
-      for(let i = 0; i < PIXEL_SIZE; ++i) {
-        destPixels[readOffset + i] = pixels[readOffset + i];
-      }
-    }
+    destPixels[readOffset] = pixels[readOffset];
+    let r = pixels[readOffset], g = pixels[readOffset + 1], b = pixels[readOffset + 2];
+    let [h, s, v] = rgbToHsv(r,g,b);
+    if (adjustHueDegrees !== null) h = (h + adjustHueDegrees) % 360;
+    if (adjustSaturationPercent !== null) s = (s * adjustSaturationPercent) % 256;
+    if (adjustValuePercent !== null) v = (v * adjustValuePercent) % 256;
+    [r, g, b] = hsvToRgb(h, s, v);
+    if (adjustContrastPercent !== null) [r, g, b] = adjustContrast(r, g, b, adjustContrastPercent, adjustContrastBrightnessThreshold);
+    destPixels[readOffset] = r;
+    destPixels[readOffset+1] = g;
+    destPixels[readOffset+2] = b;
+    destPixels[readOffset+3] = pixels[readOffset+3];
     readOffset += PIXEL_SIZE;
   }
   return destPixels;
@@ -55,7 +34,17 @@ function _recolorPixels(instructions:RecolorInstruction[], pixels:Uint8ClampedAr
 export async function recolorBitmapByProfile(imageBitmap:ImageBitmap, recolorProfile:RecolorProfile, preRenderContext:CanvasRenderingContext2D):Promise<ImageBitmap> {
   const imageData = await imageBitmapToImageData(imageBitmap, preRenderContext);
   const originalPixels = imageData.data;
-  const recoloredPixels = _recolorPixels(recolorProfile.instructions, originalPixels);
+  const recoloredPixels = _recolorPixels(originalPixels, recolorProfile);
   const recoloredImageData = new ImageData(recoloredPixels, imageBitmap.width, imageBitmap.height);
   return createImageBitmap(recoloredImageData);
+}
+
+export function createRecolorProfileForSkinTone(skinTone:SkinTone, skinToneOverrides:any):RecolorProfile|null {
+  const recolorProfile = skinToneToRecolorProfile(skinTone);
+  if (skinToneOverrides) {
+    const skinToneName = skinToneToName(skinTone);
+    const override = skinToneOverrides[skinToneName];
+    if (override) return override;
+  }
+  return skinTone === SkinTone.ORIGINAL ? null : recolorProfile;
 }

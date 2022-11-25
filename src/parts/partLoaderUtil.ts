@@ -1,19 +1,17 @@
-import { parse } from 'yaml';
+import {parse} from 'yaml';
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 import {loadEyesComponent} from "./eyes/eyes";
 import {loadHeadComponent} from "./head/head";
 import {loadMouthComponent} from "./mouth/mouth";
-
-function _loadComponentInitData(text:string):any {
-  const object:any = parse(text);
-  if (!object.partType || !object.partType.length) throw Error('Required "partType" field missing from part settings file.');
-  return object;
-}
+import {SkinTone} from "../faces/SkinTone";
+import {createRecolorProfileForSkinTone} from "../rendering/recolorUtil";
 
 async function _loadComponentInitDataFromUrl(url:string):Promise<any> {
   const response = await fetch(url);
   const text = await response.text();
-  return _loadComponentInitData(text);
+  const object:any = parse(text);
+  if (!object.partType || !object.partType.length) throw Error('Required "partType" field missing from parts file.');
+  return object;
 }
 
 type PartTypeToLoaderFuncMap = {
@@ -38,8 +36,9 @@ function _concatDefaultSpriteSheetUrl(partUrl:string) {
   return `${baseUrl}.png`;
 }
 
-export async function loadComponentFromPartUrl(partUrl:string):Promise<CanvasComponent> {
+export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone):Promise<CanvasComponent> {
   const initData = await _loadComponentInitDataFromUrl(partUrl);
+  initData.recolorProfile = createRecolorProfileForSkinTone(skinTone, initData.skinToneOverrides);
   const { partType, spriteSheetUrl } = initData;
   if (!spriteSheetUrl) initData.spriteSheetUrl = _concatDefaultSpriteSheetUrl(partUrl);
   return _loadCanvasComponentForPartType(partType, initData);

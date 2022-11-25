@@ -11,7 +11,7 @@ import VisemeSelector from "./ui/VisemeSelector";
 import styles from './App.module.css';
 
 import React, {useEffect} from 'react';
-import {loadComponentFromPartUrl} from "./parts/partLoaderUtil";
+import {loadFaceFromUrl} from "./faces/faceLoaderUtil";
 
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
@@ -22,13 +22,7 @@ const blinkController = new BlinkController();
 const attentionController = new AttentionController();
 
 async function _init():Promise<void> {
-  head = await loadComponentFromPartUrl('/parts/billy-head.yml');
-  const mouth = await loadComponentFromPartUrl('/parts/billy-mouth.yml');
-  const eyes = await loadComponentFromPartUrl('/parts/billy-eyes.yml');
-  head.addChildAt(mouth, 20, 290);
-  head.addChildAt(eyes, 25, 150);
-  head.offsetX = 200;
-  head.offsetY = 20;
+  head = await loadFaceFromUrl('/faces/billy.yml');
   blinkController.start();
   attentionController.start();
 }

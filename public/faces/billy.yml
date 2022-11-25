@@ -1,0 +1,5 @@
+skinTone: lightBrown
+base: /parts/billy-head.yml
+parts:
+  - /parts/billy-eyes.yml @25,150
+  - /parts/billy-mouth.yml @20,290
