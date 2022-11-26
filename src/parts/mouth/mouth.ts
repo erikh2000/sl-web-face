@@ -1,10 +1,10 @@
-import {loadImage} from "../../rendering/imageUtil";
+import {contextToImageBitmap, loadImage} from "../../rendering/imageUtil";
 import {Emotion} from "../../events/emotions";
 import {Viseme} from "../../events/visemes";
 import Topics from '../../events/topics';
 import {subscribeEvent} from "../../events/thePubSub";
 import CanvasComponent from "../../canvasComponent/CanvasComponent";
-import {createOffScreenContext} from "../../rendering/canvasUtil";
+import {clearContext, createOffScreenContext} from "../../rendering/canvasUtil";
 import {recolorBitmapByProfile} from "../../rendering/recolorUtil";
 import {RecolorProfile} from "../../rendering/RecolorProfile";
 
@@ -14,6 +14,7 @@ const Y_EMOTION_MOUTHS = 1152;
 const X_EMOTION_MOUTHS = 0;
 const CX_MOUTH = 256;
 const CY_MOUTH = 128;
+const X_SKIN_MASK = CX_MOUTH;
 
 type VisemeAndEmotionBitmaps = {
   visemeBitmaps:ImageBitmap[],
@@ -24,10 +25,22 @@ async function _imageToVisemeBitmaps(image:HTMLImageElement, preRenderContext:Ca
   const visemeBitmaps:ImageBitmap[] = [];
   for(let visemeI = 0; visemeI < Viseme.COUNT; ++visemeI) {
     if (visemeI === Viseme.REST) continue;
-    let bitmap = await createImageBitmap(image, X_VISEME_MOUTHS,
-      Y_VISEME_MOUTHS + ((visemeI - 1) * CY_MOUTH), CX_MOUTH, CY_MOUTH);
-    if (recolorProfile) bitmap = await recolorBitmapByProfile(bitmap, recolorProfile, preRenderContext);
-    visemeBitmaps.push(bitmap);
+    const yMouth = Y_VISEME_MOUTHS + ((visemeI - 1) * CY_MOUTH);
+    const originalBitmap = await createImageBitmap(image, X_VISEME_MOUTHS, yMouth, CX_MOUTH, CY_MOUTH);
+    if (recolorProfile) {
+      const recoloredBitmap = await recolorBitmapByProfile(originalBitmap, recolorProfile, preRenderContext);
+      const skinMaskBitmap = await createImageBitmap(image, X_SKIN_MASK, yMouth, CX_MOUTH, CY_MOUTH);
+      clearContext(preRenderContext);
+      preRenderContext.globalCompositeOperation = 'source-over';
+      preRenderContext.drawImage(skinMaskBitmap, 0, 0);
+      preRenderContext.globalCompositeOperation = 'source-in';
+      preRenderContext.drawImage(recoloredBitmap, 0, 0);
+      preRenderContext.globalCompositeOperation = 'destination-over';
+      preRenderContext.drawImage(originalBitmap, 0, 0);
+      visemeBitmaps.push(await contextToImageBitmap(preRenderContext));
+    } else {
+      visemeBitmaps.push(originalBitmap) 
+    }
   }
   return visemeBitmaps;
 }
@@ -35,10 +48,22 @@ async function _imageToVisemeBitmaps(image:HTMLImageElement, preRenderContext:Ca
 async function _imageToEmotionBitmaps(image:HTMLImageElement, preRenderContext:CanvasRenderingContext2D, recolorProfile:RecolorProfile|null):Promise<ImageBitmap[]> {
   const emotionBitmaps:ImageBitmap[] = [];
   for(let emotionI = 0; emotionI < Emotion.COUNT; ++emotionI) {
-    let bitmap = await createImageBitmap(image, X_EMOTION_MOUTHS,
-      Y_EMOTION_MOUTHS + (emotionI * CY_MOUTH), CX_MOUTH, CY_MOUTH);
-    if (recolorProfile) bitmap = await recolorBitmapByProfile(bitmap, recolorProfile, preRenderContext);
-    emotionBitmaps.push(bitmap);
+    const yMouth = Y_EMOTION_MOUTHS + (emotionI * CY_MOUTH);
+    let originalBitmap = await createImageBitmap(image, X_EMOTION_MOUTHS, yMouth, CX_MOUTH, CY_MOUTH);
+    if (recolorProfile) {
+      const recoloredBitmap = await recolorBitmapByProfile(originalBitmap, recolorProfile, preRenderContext);
+      const skinMaskBitmap = await createImageBitmap(image, X_SKIN_MASK, yMouth, CX_MOUTH, CY_MOUTH);
+      clearContext(preRenderContext);
+      preRenderContext.globalCompositeOperation = 'source-over';
+      preRenderContext.drawImage(skinMaskBitmap, 0, 0);
+      preRenderContext.globalCompositeOperation = 'source-in';
+      preRenderContext.drawImage(recoloredBitmap, 0, 0);
+      preRenderContext.globalCompositeOperation = 'destination-over';
+      preRenderContext.drawImage(originalBitmap, 0, 0);
+      emotionBitmaps.push(await contextToImageBitmap(preRenderContext));
+    } else {
+      emotionBitmaps.push(originalBitmap); 
+    }
   }
   return emotionBitmaps;
 }

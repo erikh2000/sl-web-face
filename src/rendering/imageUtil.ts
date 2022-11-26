@@ -23,6 +23,11 @@ export function imageBitmapToImageData(sourceBitmap:ImageBitmap, preRenderContex
   return preRenderContext.getImageData(0, 0, sourceBitmap.width, sourceBitmap.height);
 }
 
+export async function contextToImageBitmap(context:CanvasRenderingContext2D):Promise<ImageBitmap> {
+  const imageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+  return createImageBitmap(imageData);
+}
+
 const OPACITY_THRESHOLD = 127;
 const PIXEL_SIZE = 4;
 const TRANSPARENT_ALPHA = 0;

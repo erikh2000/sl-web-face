@@ -1,4 +1,4 @@
-skinTone: lightBrown
+skinTone: moderateBrown
 base: /parts/billy-head.yml
 parts:
   - /parts/billy-eyes.yml @25,150
