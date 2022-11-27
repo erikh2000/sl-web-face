@@ -12,8 +12,7 @@ import styles from './App.module.css';
 
 import React, {useEffect} from 'react';
 import {loadFaceFromUrl} from "./faces/faceLoaderUtil";
-import SpeechAudio from "./speech/SpeechAudio";
-import {loadSpeechFromUrl} from "./speech/speechFileUtil";
+import SaySelector from "./ui/SaySelector";
 
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
@@ -22,7 +21,6 @@ let head:CanvasComponent|null = null;
 let isInitialized:boolean = false;
 const blinkController = new BlinkController();
 const attentionController = new AttentionController();
-let speechAudio:SpeechAudio|null = null;
 
 async function _init():Promise<void> {
   head = await loadFaceFromUrl('/faces/billy.yml');
@@ -40,14 +38,6 @@ function _onClick(event:any) {
   const dx = (event.screenX - window.screen.width/2) / window.screen.width;
   const dy = (event.screenY - window.screen.height/2) / window.screen.height;
   publishEvent(Topics.ATTENTION, {dx, dy});
-  if (speechAudio) {
-    speechAudio.play();
-    return;
-  }
-  loadSpeechFromUrl('/speech/could you stay.wav').then(loadedSpeechAudio => {
-    speechAudio = loadedSpeechAudio;
-    speechAudio.play();
-  });
 }
 
 function App() {
@@ -62,6 +52,7 @@ function App() {
       <EmotionSelector />
       <LidLevelSelector />
       <VisemeSelector />
+      <SaySelector />
       <Canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} isAnimated={true} onDraw={_onDrawCanvas} />
     </div>
   );
