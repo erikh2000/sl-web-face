@@ -14,9 +14,6 @@ import React, {useEffect} from 'react';
 import {loadFaceFromUrl} from "./faces/faceLoaderUtil";
 import SaySelector from "./ui/SaySelector";
 
-const CANVAS_WIDTH = 500;
-const CANVAS_HEIGHT = 500;
-
 let head:CanvasComponent|null = null;
 let isInitialized:boolean = false;
 const blinkController = new BlinkController();
@@ -24,6 +21,8 @@ const attentionController = new AttentionController();
 
 async function _init():Promise<void> {
   head = await loadFaceFromUrl('/faces/billy.yml');
+  head.offsetX = 50;
+  head.offsetY = 30;
   blinkController.start();
   attentionController.start();
 }
@@ -49,11 +48,13 @@ function App() {
 
   return (
     <div className={styles.app} onClick={_onClick}>
-      <EmotionSelector />
-      <LidLevelSelector />
-      <VisemeSelector />
-      <SaySelector />
-      <Canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} isAnimated={true} onDraw={_onDrawCanvas} />
+      <div className={styles.configPanel}>
+        <EmotionSelector />
+        <LidLevelSelector />
+        <VisemeSelector />
+        <SaySelector />
+      </div>
+      <Canvas className={styles.canvas} isAnimated={true} onDraw={_onDrawCanvas} />
     </div>
   );
 }
