@@ -21,8 +21,10 @@ function Selector(props:IProps) {
   }
   
   const options = optionNames.map((optionName, optionNo) => {
-    const className = optionNo === selectedOptionNo ? styles.selected : '';
-    return (<button key={optionName} className={className} onClick={() => _onOptionClick(optionNo)}>{optionName}</button>)
+    const selected = optionNo === selectedOptionNo;
+    const disabled:boolean = !(onClick || (onChange && !selected));
+    const className = `${selected ? styles.selected : ''} ${disabled ? styles.disabled : styles.enabled}`;
+    return (<button key={optionName} className={className} onClick={() => _onOptionClick(optionNo)} disabled={disabled}>{optionName}</button>)
   });
   
   return (

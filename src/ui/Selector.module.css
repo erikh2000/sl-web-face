@@ -12,6 +12,14 @@
     flex-shrink: 3;
 }
 
+.disabled {
+    cursor: default;
+}
+
+.enabled {
+    cursor: pointer;
+}
+
 @media only screen and (max-width: 600px) {
     .bar button {
         font-size: .4rem;
