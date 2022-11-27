@@ -34,9 +34,12 @@ class SpeechAudio {
     this._checkForVisemesTimeout = null;
   }
   
-  play():void {
+  play(onEnded?:()=>void):void {
     if (this.isPlaying) this.stop();
-    this._audioBufferSourceNode = playAudioBuffer(this._audioBuffer, () => this.stop());
+    this._audioBufferSourceNode = playAudioBuffer(this._audioBuffer, () => {
+      this.stop()
+      if (onEnded) onEnded();
+    });
     this._startPlayTime = Date.now();
     
     this._checkForVisemesTimeout = setInterval(() => {

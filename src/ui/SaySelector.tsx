@@ -1,6 +1,9 @@
 import Selector from './Selector';
 import {loadSpeechFromUrl} from "../speech/speechFileUtil";
 import SpeechAudio from "../speech/SpeechAudio";
+import {publishEvent} from "../events/thePubSub";
+import Topics from "../events/topics";
+import {Viseme} from "../events/visemes";
 
 const speechAudios:SpeechAudio[] = [];
 const optionNames = ['Male 1', 'Male 2', 'Male 3', 'Female 1', 'Female 2', 'Female 3'];
@@ -10,7 +13,8 @@ interface IProps {
 
 }
 
-function _onChange(optionNo:number) {
+function _onClick(optionNo:number) {
+  publishEvent(Topics.VISEME, Viseme.REST);
   speechAudios.forEach((speechAudio, audioNo) => {
     speechAudio.stop();
   });
@@ -20,12 +24,12 @@ function _onChange(optionNo:number) {
   }
   loadSpeechFromUrl(optionWavUrls[optionNo]).then(speechAudio => {
     speechAudios[optionNo] = speechAudio;
-    speechAudio.play();
+    speechAudio.play(() => publishEvent(Topics.VISEME, Viseme.REST) );
   });
 }
 
 function SaySelector(props:IProps) {
-  return <Selector defaultOptionNo={0} label='Say' optionNames={optionNames} onChange={_onChange} />
+  return <Selector defaultOptionNo={0} label='Say' optionNames={optionNames} onClick={_onClick} />
 }
 
 export default SaySelector;

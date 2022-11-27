@@ -5,16 +5,18 @@ interface IProps {
   label:string,
   defaultOptionNo:number,
   optionNames:string[],
-  onChange:(optionNo:number) => void
+  onChange?:(optionNo:number) => void,
+  onClick?:(optionNo:number) => void
 }
 
 function Selector(props:IProps) {
-  const { label, optionNames, onChange, defaultOptionNo } = props;
+  const { label, optionNames, onClick, onChange, defaultOptionNo } = props;
   const [selectedOptionNo, setSelectedOptionNo] = useState<number>(defaultOptionNo);
   
   function _onOptionClick(optionNo:number) {
+    if (onClick) onClick(optionNo);
     if (optionNo === selectedOptionNo) return;
-    onChange(optionNo);
+    if (onChange) onChange(optionNo);
     setSelectedOptionNo(optionNo);
   }
   
