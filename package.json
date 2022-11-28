@@ -52,5 +52,25 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "jest": {
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "./src/**/*.{js,ts}",
+      "!./src/3rdParty/**",
+      "!./src/index.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 100
+      }
+    },
+    "moduleDirectories": [
+      "node_modules",
+      "src"
+    ],
+    "globals": {
+      "window": {}
+    }
   }
 }
