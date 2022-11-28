@@ -1,4 +1,4 @@
-const Topics = {
+const Topic = {
   ATTENTION: 'attention',
   BLINK: 'blink',
   EMOTION: 'emotion',
@@ -6,4 +6,4 @@ const Topics = {
   VISEME: 'viseme'
 };
 
-export default Topics;
+export default Topic;

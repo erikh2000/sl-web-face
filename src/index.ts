@@ -1,11 +1,13 @@
+export { default as CanvasComponent } from './canvasComponent/CanvasComponent';
 export { default as AttentionController } from './controllers/AttentionController';
 export { default as BlinkController } from './controllers/BlinkController';
+export { default as Emotion } from './events/emotions';
+export { default as Topic } from './events/topics';
+export { default as LidLevel } from './events/lidLevels';
+export { default as Viseme } from './events/visemes';
+export { default as SpeechAudio } from './speech/SpeechAudio';
 
 export * from './events/thePubSub';
-export * from './events/emotions';
-export * from './events/visemes';
-export * from './events/lidLevels';
-export * from './events/topics';
 export * from './speech/speechFileUtil';
 export * from './faces/faceLoaderUtil';
 

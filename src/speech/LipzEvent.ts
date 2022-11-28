@@ -1,5 +1,5 @@
 import IIterableEvent from "../events/IIterableEvent";
-import {Viseme} from "../events/visemes";
+import Viseme from "../events/visemes";
 
 class LipzEvent implements IIterableEvent {
   private _time:number;

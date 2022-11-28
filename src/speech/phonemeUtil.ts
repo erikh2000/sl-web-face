@@ -1,5 +1,5 @@
 import ArpabetToBlair from "./ArpabetToBlair";
-import {Viseme} from "../events/visemes";
+import Viseme from "../events/visemes";
 
 export function phonemeToViseme(phoneme:string):Viseme {
   const viseme = ArpabetToBlair[phoneme];

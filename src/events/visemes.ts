@@ -1,4 +1,4 @@
-export enum Viseme {
+enum Viseme {
   REST,
   AI,
   CONS,
@@ -11,3 +11,5 @@ export enum Viseme {
   WQ,
   COUNT
 };
+
+export default Viseme;

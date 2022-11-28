@@ -3,7 +3,7 @@ import { playAudioBuffer } from "../audio/playAudioUtil";
 import EventIterator from "../events/EventIterator";
 import {FRAMES_PER_SECOND} from "./lipzFileUtil";
 import {publishEvent} from "../events/thePubSub";
-import Topics from "../events/topics";
+import Topic from "../events/topics";
 
 const CHECK_VISEME_INTERVAL = 1000 / (FRAMES_PER_SECOND * 2);
 
@@ -46,7 +46,7 @@ class SpeechAudio {
       const elapsed = (Date.now() - this._startPlayTime) / 1000;
       let lipzEvent = this._lipzIterator.next(elapsed);
       while(lipzEvent) {
-        publishEvent(Topics.VISEME, lipzEvent.viseme);
+        publishEvent(Topic.VISEME, lipzEvent.viseme);
         lipzEvent = this._lipzIterator.next(elapsed);
       }
     }, CHECK_VISEME_INTERVAL);

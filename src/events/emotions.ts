@@ -1,4 +1,4 @@
-export enum Emotion {
+enum Emotion {
   NEUTRAL,
   CONFUSED,
   SAD,
@@ -12,3 +12,5 @@ export enum Emotion {
   IRRITATED,
   COUNT
 }
+
+export default Emotion;

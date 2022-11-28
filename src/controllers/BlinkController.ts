@@ -1,11 +1,11 @@
 import { publishEvent } from "../events/thePubSub";
-import Topics from "../events/topics";
+import Topic from "../events/topics";
 
 const BLINK_INTERVAL_RANGE = 5000;
 const BLINK_INTERVAL_MINIMUM = 500;
   
 function _blink():NodeJS.Timeout {
-  publishEvent(Topics.BLINK, {});
+  publishEvent(Topic.BLINK, {});
   return setTimeout(_blink, Math.random() * BLINK_INTERVAL_RANGE + BLINK_INTERVAL_MINIMUM);
 }
 

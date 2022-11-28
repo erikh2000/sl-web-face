@@ -8,8 +8,8 @@ import {
 } from "../../rendering/imageUtil";
 import CanvasComponent from "../../canvasComponent/CanvasComponent";
 import IrisArea from "./IrisArea";
-import {Emotion} from "../../events/emotions";
-import Topics from '../../events/topics';
+import Emotion from "../../events/emotions";
+import Topic from '../../events/topics';
 import {subscribeEvent} from "../../events/thePubSub";
 import {clearContext, createOffScreenContext} from "../../rendering/canvasUtil";
 import LidLevel from "../../events/lidLevels";
@@ -245,20 +245,20 @@ async function _onLoad(initData:any):Promise<any> {
   };
   _calcIrisTargetAndUpdateState(eyesComponentState);
   
-  subscribeEvent(Topics.EMOTION, (event:any) => eyesComponentState.currentEmotion = event as Emotion);
-  subscribeEvent(Topics.ATTENTION, (event:any) => {
+  subscribeEvent(Topic.EMOTION, (event:any) => eyesComponentState.currentEmotion = event as Emotion);
+  subscribeEvent(Topic.ATTENTION, (event:any) => {
     eyesComponentState.attentionDx = event.dx;
     eyesComponentState.attentionDy = event.dy;
     _calcIrisTargetAndUpdateState(eyesComponentState);
   });
-  subscribeEvent(Topics.BLINK, () => {
+  subscribeEvent(Topic.BLINK, () => {
     if ( eyesComponentState.lidLevel.isComplete) {
       eyesComponentState.lidLevel.setTarget(LidLevel.CLOSED, BLINK_DURATION/2, () => {
         eyesComponentState.lidLevel.setTarget(eyesComponentState.restingLidLevel, BLINK_DURATION/2);
       });
     }
   });
-  subscribeEvent(Topics.LID_LEVEL, (event:any) => {
+  subscribeEvent(Topic.LID_LEVEL, (event:any) => {
     const nextLidLevel = event as LidLevel;
     if (nextLidLevel === eyesComponentState.restingLidLevel) return;
     eyesComponentState.restingLidLevel = nextLidLevel;

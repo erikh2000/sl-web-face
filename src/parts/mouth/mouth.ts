@@ -1,7 +1,7 @@
 import {contextToImageBitmap, loadImage} from "../../rendering/imageUtil";
-import {Emotion} from "../../events/emotions";
-import {Viseme} from "../../events/visemes";
-import Topics from '../../events/topics';
+import Emotion from "../../events/emotions";
+import Viseme from "../../events/visemes";
+import Topic from '../../events/topics';
 import {subscribeEvent} from "../../events/thePubSub";
 import CanvasComponent from "../../canvasComponent/CanvasComponent";
 import {clearContext, createOffScreenContext} from "../../rendering/canvasUtil";
@@ -84,8 +84,8 @@ async function _onLoad(initData:any):Promise<any> {
     currentEmotion: Emotion.NEUTRAL,
     currentViseme: Viseme.REST
   };
-  subscribeEvent(Topics.VISEME, (event) => mouthComponentState.currentViseme = event as Viseme);
-  subscribeEvent(Topics.EMOTION, (event) => mouthComponentState.currentEmotion = event as Emotion);
+  subscribeEvent(Topic.VISEME, (event) => mouthComponentState.currentViseme = event as Viseme);
+  subscribeEvent(Topic.EMOTION, (event) => mouthComponentState.currentEmotion = event as Emotion);
   return mouthComponentState;
 }
 

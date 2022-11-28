@@ -1,4 +1,4 @@
-import {Viseme} from "../events/visemes";
+import Viseme from "../events/visemes";
 
 type ArpabetToBlairMap = {
   [phoneme:string]:Viseme

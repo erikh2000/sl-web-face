@@ -1,7 +1,7 @@
 import { publishEvent, subscribeEvent } from "../events/thePubSub";
-import Topics from "../events/topics";
+import Topic from "../events/topics";
 import LidLevel from "../events/lidLevels";
-import {Emotion} from "../events/emotions";
+import Emotion from "../events/emotions";
 
 const ATTENTION_INTERVAL_RANGE = 10000;
 const ATTENTION_INTERVAL_MINIMUM = 1000;
@@ -14,7 +14,7 @@ function _getRandomAttentionTarget():Target {
 
 function _changeToRandomAttentionTarget(energy:number):NodeJS.Timeout {
   const target = _getRandomAttentionTarget();
-  publishEvent(Topics.ATTENTION, target);
+  publishEvent(Topic.ATTENTION, target);
   return setTimeout(() => _changeToRandomAttentionTarget(energy), _getRandomAttentionChangeInterval(energy));
 }
 
@@ -52,13 +52,13 @@ class AttentionController {
   start() {
     this.energy = _calcEnergy(this.lidLevel, this.emotion);
     this.lastTimeout = _changeToRandomAttentionTarget(this.energy);
-    subscribeEvent(Topics.LID_LEVEL, this._onLidLevelChange);
-    subscribeEvent(Topics.EMOTION, this._onEmotionChange);
+    subscribeEvent(Topic.LID_LEVEL, this._onLidLevelChange);
+    subscribeEvent(Topic.EMOTION, this._onEmotionChange);
   }
   
   lookAt(dx:number, dy:number) {
     if (this.lastTimeout) clearTimeout(this.lastTimeout);
-    publishEvent(Topics.ATTENTION, {dx, dy});
+    publishEvent(Topic.ATTENTION, {dx, dy});
     return setTimeout(() => _changeToRandomAttentionTarget(this.energy), _getRandomAttentionChangeInterval(this.energy));
   }
 
