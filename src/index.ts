@@ -7,6 +7,7 @@ export { default as LidLevel } from './events/lidLevels';
 export { default as Viseme } from './events/visemes';
 export { default as SpeechAudio } from './speech/SpeechAudio';
 
+export * from './audio/loadAudioUtil';
 export * from './events/thePubSub';
 export * from './speech/speechFileUtil';
 export * from './faces/faceLoaderUtil';
