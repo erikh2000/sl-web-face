@@ -4,6 +4,7 @@ import EventIterator from "../events/EventIterator";
 import {FRAMES_PER_SECOND} from "./lipzFileUtil";
 import {publishEvent} from "../events/thePubSub";
 import Topic from "../events/topics";
+import Viseme from "../events/visemes";
 
 const CHECK_VISEME_INTERVAL = 1000 / (FRAMES_PER_SECOND * 2);
 
@@ -32,6 +33,7 @@ class SpeechAudio {
     this._startPlayTime = 0;
     if (this._checkForVisemesTimeout) clearInterval(this._checkForVisemesTimeout);
     this._checkForVisemesTimeout = null;
+    publishEvent(Topic.VISEME, Viseme.REST);
   }
   
   play(onEnded?:()=>void):void {
