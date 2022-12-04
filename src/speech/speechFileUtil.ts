@@ -1,8 +1,8 @@
-import {loadLipzFromText} from "./lipzFileUtil";
-import LipzEvent from "./LipzEvent";
 import {replaceUrlResourceExtension} from "../common/urlUtil";
-import {loadWavFromUrl} from "../audio/loadAudioUtil";
 import SpeechAudio from "./SpeechAudio";
+
+import {loadWavFromUrl} from 'sl-web-audio';
+import {loadLipzFromText, LipzEvent } from 'sl-web-speech';
 
 async function _loadLipzFromUrl(url:string):Promise<LipzEvent[]> {
   const response = await fetch(url);

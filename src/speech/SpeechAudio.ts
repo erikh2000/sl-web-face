@@ -1,10 +1,10 @@
-import LipzEvent from "./LipzEvent";
-import { playAudioBuffer } from "../audio/playAudioUtil";
 import EventIterator from "../events/EventIterator";
-import {FRAMES_PER_SECOND} from "./lipzFileUtil";
 import {publishEvent} from "../events/thePubSub";
 import Topic from "../events/topics";
 import Viseme from "../events/visemes";
+
+import { playAudioBuffer,  } from 'sl-web-audio';
+import { LipzEvent, FRAMES_PER_SECOND } from 'sl-web-speech';
 
 const CHECK_VISEME_INTERVAL = 1000 / (FRAMES_PER_SECOND * 2);
 

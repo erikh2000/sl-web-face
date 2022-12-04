@@ -1,7 +1,7 @@
 import {contextToImageBitmap, loadImage} from "../../rendering/imageUtil";
 import Emotion from "../../events/emotions";
-import Viseme from "../../events/visemes";
 import Topic from '../../events/topics';
+import Viseme from '../../events/visemes';
 import {subscribeEvent} from "../../events/thePubSub";
 import CanvasComponent from "../../canvasComponent/CanvasComponent";
 import {clearContext, createOffScreenContext} from "../../rendering/canvasUtil";
@@ -103,4 +103,4 @@ export async function loadMouthComponent(initData:MouthInitData):Promise<CanvasC
   const component = new CanvasComponent(_onLoad, _onRender);
   await component.load(initData);
   return component;
-} 
+}
