@@ -36,7 +36,7 @@ function _concatDefaultSpriteSheetUrl(partUrl:string) {
   return `${baseUrl}.png`;
 }
 
-export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone):Promise<CanvasComponent> {
+export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone = SkinTone.ORIGINAL):Promise<CanvasComponent> {
   const initData = await _loadComponentInitDataFromUrl(partUrl);
   initData.recolorProfile = createRecolorProfileForSkinTone(skinTone, initData.skinToneOverrides);
   const { partType, spriteSheetUrl } = initData;

@@ -9,6 +9,7 @@ export { default as SpeechAudio } from './speech/SpeechAudio';
 export * from './events/thePubSub';
 export * from './speech/speechFileUtil';
 export * from './faces/faceLoaderUtil';
+export * from './parts/partLoaderUtil';
 
 /* This file only imports and re-exports top-level APIs and has been excluded from Jest 
    coverage reporting in package.json. Exports are tested via unit tests associated

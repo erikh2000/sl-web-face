@@ -2,18 +2,16 @@ import {replaceUrlResourceExtension} from "../common/urlUtil";
 import SpeechAudio from "./SpeechAudio";
 
 import {loadWavFromUrl} from 'sl-web-audio';
-import {loadLipzFromText, LipzEvent } from 'sl-web-speech';
 
-async function _loadLipzFromUrl(url:string):Promise<LipzEvent[]> {
+async function _loadLipzTextFromUrl(url:string):Promise<string> {
   const response = await fetch(url);
-  if (response.status !== 200 && response.status !== 304) return [];
-  const text = await response.text();
-  return loadLipzFromText(text);
+  if (response.status !== 200 && response.status !== 304) return '';
+  return response.text();
 }
 
 export async function loadSpeechFromUrl(wavUrl:string):Promise<SpeechAudio> {
   const audioBuffer = await loadWavFromUrl(wavUrl);
   const lipzUrl = replaceUrlResourceExtension(wavUrl, '.lipz.txt');
-  const lipzEvents = await  _loadLipzFromUrl(lipzUrl);
-  return new SpeechAudio(audioBuffer, lipzEvents);
+  const lipzText = await _loadLipzTextFromUrl(lipzUrl);
+  return new SpeechAudio(audioBuffer, lipzText);
 }

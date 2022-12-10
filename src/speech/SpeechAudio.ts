@@ -4,7 +4,7 @@ import Topic from "../events/topics";
 import Viseme from "../events/visemes";
 
 import { playAudioBuffer,  } from 'sl-web-audio';
-import { LipzEvent, FRAMES_PER_SECOND } from 'sl-web-speech';
+import { LipzEvent, FRAMES_PER_SECOND, loadLipzFromText } from 'sl-web-speech';
 
 const CHECK_VISEME_INTERVAL = 1000 / (FRAMES_PER_SECOND * 2);
 
@@ -15,9 +15,10 @@ class SpeechAudio {
   private _startPlayTime:number;
   private _checkForVisemesTimeout:NodeJS.Timeout|null;
 
-  constructor(audioBuffer:AudioBuffer, lipzEvents:LipzEvent[]) {
+  constructor(audioBuffer:AudioBuffer, lipzText:string) {
     this._audioBuffer = audioBuffer;
     this._audioBufferSourceNode = null;
+    const lipzEvents:LipzEvent[] = loadLipzFromText(lipzText);
     this._lipzIterator = new EventIterator<LipzEvent>(lipzEvents);
     this._startPlayTime = 0;
     this._checkForVisemesTimeout = null;
