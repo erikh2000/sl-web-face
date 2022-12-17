@@ -103,8 +103,10 @@ function _onBoundingDimensions(_componentState:any):[width:number, height:number
   return [CX_MOUTH, CY_MOUTH];
 }
 
+export const MOUTH_PART_TYPE = 'mouth';
+
 export async function loadMouthComponent(initData:MouthInitData):Promise<CanvasComponent> {
-  const component = new CanvasComponent(_onLoad, _onRender, _onBoundingDimensions);
+  const component = new CanvasComponent(MOUTH_PART_TYPE, _onLoad, _onRender, _onBoundingDimensions);
   await component.load(initData);
   return component;
 }

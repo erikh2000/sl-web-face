@@ -50,8 +50,10 @@ function _onBoundingDimensions(componentState:any):[width:number, height:number]
   return [headBitmap.width, headBitmap.height];
 }
 
+export const HEAD_PART_TYPE = 'head';
+
 export async function loadHeadComponent(initData:HeadInitData):Promise<CanvasComponent> {
-  const component = new CanvasComponent(_onLoad, _onRender, _onBoundingDimensions);
+  const component = new CanvasComponent(HEAD_PART_TYPE, _onLoad, _onRender, _onBoundingDimensions);
   await component.load(initData);
   return component;
 }

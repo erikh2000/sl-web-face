@@ -297,8 +297,10 @@ function _onBoundingDimensions(_componentState:any):[width:number, height:number
   return [CX_EYES, CY_EYES];
 }
 
+export const EYES_PART_TYPE = 'eyes';
+
 export async function loadEyesComponent(initData:EyesInitData):Promise<CanvasComponent> {
-  const component = new CanvasComponent(_onLoad, _onRender, _onBoundingDimensions);
+  const component = new CanvasComponent(EYES_PART_TYPE, _onLoad, _onRender, _onBoundingDimensions);
   await component.load(initData);
   return component;
 } 

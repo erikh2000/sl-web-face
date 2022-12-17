@@ -37,17 +37,19 @@ class CanvasComponent {
   private _onLoad:ILoadCallback;
   private _onRender:IRenderCallback;
   private _onBoundingDimensions:IBoundingDimensionsCallback;
+  private _partType:string;
   private _componentState:any;
   private _loadPromise:Promise<void>|null;
   private _isLoaded:boolean;
   
-  constructor(onLoad:ILoadCallback, onRender:IRenderCallback, onBoundingDimensions:IBoundingDimensionsCallback) {
+  constructor(partType:string, onLoad:ILoadCallback, onRender:IRenderCallback, onBoundingDimensions:IBoundingDimensionsCallback) {
     this._offsetX = this._offsetY = 0;
     this._children = [];
     this._parent = null;
     this._onLoad = onLoad;
     this._onRender = onRender;
     this._onBoundingDimensions = onBoundingDimensions;
+    this._partType = partType;
     this._loadPromise = null;
     this._isLoaded = false;
     this._componentState = null;
@@ -83,6 +85,9 @@ class CanvasComponent {
   get parent():CanvasComponent|null {
     return this._parent;
   }
+  
+  get partType():string { return this._partType; }
+  
   
   setParent(parentComponent:CanvasComponent|null) {
     if (this._parent) this._parent._children = this._parent._children.filter(child => child !== this);
