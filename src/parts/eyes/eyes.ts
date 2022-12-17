@@ -293,8 +293,12 @@ function _onRender(componentState:any, context:CanvasRenderingContext2D, x:numbe
   context.drawImage(overlayBitmap, x, y);
 }
 
+function _onBoundingDimensions(_componentState:any):[width:number, height:number] {
+  return [CX_EYES, CY_EYES];
+}
+
 export async function loadEyesComponent(initData:EyesInitData):Promise<CanvasComponent> {
-  const component = new CanvasComponent(_onLoad, _onRender);
+  const component = new CanvasComponent(_onLoad, _onRender, _onBoundingDimensions);
   await component.load(initData);
   return component;
 } 

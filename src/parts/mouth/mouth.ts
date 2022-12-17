@@ -99,8 +99,12 @@ function _onRender(componentState:any, context:CanvasRenderingContext2D, x:numbe
   context.drawImage(bitmap, x, y);
 }
 
+function _onBoundingDimensions(_componentState:any):[width:number, height:number] {
+  return [CX_MOUTH, CY_MOUTH];
+}
+
 export async function loadMouthComponent(initData:MouthInitData):Promise<CanvasComponent> {
-  const component = new CanvasComponent(_onLoad, _onRender);
+  const component = new CanvasComponent(_onLoad, _onRender, _onBoundingDimensions);
   await component.load(initData);
   return component;
 }

@@ -45,8 +45,13 @@ function _onRender(componentState:any, context:CanvasRenderingContext2D, x:numbe
   context.drawImage(headBitmap, x, y);
 }
 
+function _onBoundingDimensions(componentState:any):[width:number, height:number] {
+  const { headBitmap } = componentState as HeadComponentState;
+  return [headBitmap.width, headBitmap.height];
+}
+
 export async function loadHeadComponent(initData:HeadInitData):Promise<CanvasComponent> {
-  const component = new CanvasComponent(_onLoad, _onRender);
+  const component = new CanvasComponent(_onLoad, _onRender, _onBoundingDimensions);
   await component.load(initData);
   return component;
 }

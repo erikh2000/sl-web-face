@@ -25,6 +25,10 @@ interface ILoadCallback {
   (initData:any):Promise<any>
 }
 
+interface IBoundingDimensionsCallback {
+  (componentState:any):[width:number, height:number];
+} 
+
 class CanvasComponent {
   private _offsetX:number;
   private _offsetY:number;
@@ -32,16 +36,18 @@ class CanvasComponent {
   private _parent:CanvasComponent|null;
   private _onLoad:ILoadCallback;
   private _onRender:IRenderCallback;
+  private _onBoundingDimensions:IBoundingDimensionsCallback;
   private _componentState:any;
   private _loadPromise:Promise<void>|null;
   private _isLoaded:boolean;
   
-  constructor(onLoad:ILoadCallback, onRender:IRenderCallback) {
+  constructor(onLoad:ILoadCallback, onRender:IRenderCallback, onBoundingDimensions:IBoundingDimensionsCallback) {
     this._offsetX = this._offsetY = 0;
     this._children = [];
     this._parent = null;
     this._onLoad = onLoad;
     this._onRender = onRender;
+    this._onBoundingDimensions = onBoundingDimensions;
     this._loadPromise = null;
     this._isLoaded = false;
     this._componentState = null;
@@ -117,6 +123,22 @@ class CanvasComponent {
   renderWithChildren(context:CanvasRenderingContext2D) {
     const [x,y] = _findAbsoluteCoords(this);
     _renderComponentWithChildrenAt(context, this, x, y);
+  }
+  
+  get width():number {
+    const [width] = this._onBoundingDimensions(this._componentState);
+    return width;
+  }
+
+  get height():number {
+    const [, height] = this._onBoundingDimensions(this._componentState);
+    return height;
+  }
+  
+  get boundingRect():[x:number, y:number, width:number, height:number] {
+    const [width, height] = this._onBoundingDimensions(this._componentState);
+    const [x,y] = _findAbsoluteCoords(this);
+    return [x, y, width, height];
   }
 }
 
