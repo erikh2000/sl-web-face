@@ -1,3 +1,5 @@
+export const UNLOADED = 'UNLOADED';
+
 function _findAbsoluteCoords(component:CanvasComponent):number[] {
   let x = 0, y = 0;
   let seekComponent:CanvasComponent|null = component;
@@ -29,6 +31,8 @@ interface IBoundingDimensionsCallback {
   (componentState:any):[width:number, height:number];
 }
 
+export const UI_PREFIX = 'ui:';
+
 class CanvasComponent {
   private _offsetX:number;
   private _offsetY:number;
@@ -39,10 +43,11 @@ class CanvasComponent {
   private _onLoad:ILoadCallback;
   private _onRender:IRenderCallback;
   private _onBoundingDimensions:IBoundingDimensionsCallback;
-  private _partType:string;
   private _componentState:any;
   private _loadPromise:Promise<void>|null;
   private _isLoaded:boolean;
+  private _initData:any;
+  private _isUi:boolean;
   
   constructor(onLoad:ILoadCallback, onRender:IRenderCallback, onBoundingDimensions:IBoundingDimensionsCallback) {
     this._offsetX = this._offsetY = 0;
@@ -51,22 +56,24 @@ class CanvasComponent {
     this._onLoad = onLoad;
     this._onRender = onRender;
     this._onBoundingDimensions = onBoundingDimensions;
-    this._partType = 'UNLOADED';
     this._loadPromise = null;
     this._isLoaded = false;
     this._componentState = null;
+    this._initData = null;
+    this._isUi = false;
     this._width = this._height = 0;
   }
   
   async load(initData:any):Promise<void> {
     this._loadPromise = this._onLoad(initData);
     this._loadPromise.then((componentState:any) => {
-      this._partType = initData.partType;
+      this._initData = initData;
       this._isLoaded = true;
       this._componentState = componentState;
       const [width, height] = this._onBoundingDimensions(componentState);
       this._width = width;
       this._height = height;
+      this._isUi = initData.partType.startsWith(UI_PREFIX);
     });
     return this._loadPromise;
   }
@@ -112,16 +119,23 @@ class CanvasComponent {
     return [x, y, this._width, this._height];
   }
 
-  get children():CanvasComponent[] {
-    return this._children;
-  }
+  get children():CanvasComponent[] { return this._children; }
 
-  get parent():CanvasComponent|null {
-    return this._parent;
-  }
+  get parent():CanvasComponent|null { return this._parent; }
   
-  get partType():string { return this._partType; }
+  get partType():string { return this._initData ? this._initData.partType : UNLOADED; }
   
+  get partUrl():string { return this._initData ? this._initData.partUrl : UNLOADED; }
+  
+  get skinTone():string { return this._initData ? this._initData.skinTone : UNLOADED; }
+  
+  get initData():any { return this._initData; }
+  
+  get isUi():boolean { return this._isUi; }
+  
+  set isUi(value:boolean) { this._isUi = value; }
+
+  findNonUiChildren():CanvasComponent[] { return this._children.filter(child => !child._isUi); }
   
   setParent(parentComponent:CanvasComponent|null) {
     if (this._parent) this._parent._children = this._parent._children.filter(child => child !== this);

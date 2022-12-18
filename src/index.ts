@@ -6,9 +6,11 @@ export { default as Topic } from './events/topics';
 export { default as LidLevel } from './events/lidLevels';
 export { default as SpeechAudio } from './speech/SpeechAudio';
 
+export type { default as FaceDocument } from './faces/FaceDocument';
+
 export * from './events/thePubSub';
 export * from './speech/speechFileUtil';
-export * from './faces/faceLoaderUtil';
+export * from './faces/faceDocumentUtil';
 export * from './parts/partLoaderUtil';
 
 /* This file only imports and re-exports top-level APIs and has been excluded from Jest 

@@ -2,6 +2,7 @@ import CanvasComponent from "../canvasComponent/CanvasComponent";
 import {parse} from "yaml";
 import {loadComponentFromPartUrl} from "../parts/partLoaderUtil";
 import {nameToSkinTone, SkinTone} from "./SkinTone";
+import FaceDocument from "./FaceDocument";
 
 type Part = {
   url:string,
@@ -19,6 +20,11 @@ function _parsePartValue(partValue:string):Part {
   const offsetX = parseInt(coords[0]);
   const offsetY = parseInt(coords[1]);
   return { url, offsetX, offsetY };
+}
+
+function _componentToPartValue(partComponent:CanvasComponent):string {
+  const { partUrl, offsetX, offsetY }  = partComponent;
+  return (offsetX || offsetY) ? `${partUrl} @${offsetX},${offsetY}` : partUrl;
 }
 
 async function _loadFaceDefinitionFromUrl(url:string):Promise<any> {
@@ -44,6 +50,38 @@ export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
     childComponent.setParent(baseComponent);
     childComponent.offsetX = part.offsetX;
     childComponent.offsetY = part.offsetY;
-  };
+  }
   return baseComponent;
+}
+
+export function createFaceDocument(headComponent:CanvasComponent):FaceDocument {
+  const faceDocument:FaceDocument = {
+    base: headComponent.partUrl,
+    skinTone: headComponent.skinTone,
+    parts: []
+  };
+  const headParts = headComponent.findNonUiChildren();
+  faceDocument.parts = headParts.map(part => _componentToPartValue(part));
+  return faceDocument;
+}
+
+function _findComponentByPartUrl(headComponent:CanvasComponent, partUrl:string):CanvasComponent|null {
+  const children = headComponent.findNonUiChildren();
+  const childCount = children.length;
+  for(let childI = 0; childI < childCount; ++childI) {
+    const child = children[childI];
+    if (child.partUrl === partUrl) return child;
+  }
+  return null;
+}
+
+export function updateFaceFromDocument(headComponent:CanvasComponent, document:FaceDocument) {
+  // TODO skin recoloring
+  document.parts.forEach(partValue => {
+    const part:Part = _parsePartValue(partValue);
+    const component = _findComponentByPartUrl(headComponent, part.url);
+    if (!component) return;
+    component.offsetX = part.offsetX;
+    component.offsetY = part.offsetY;
+  });
 }
