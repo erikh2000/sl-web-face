@@ -273,13 +273,14 @@ function _drawIrisesAndUpdate(context:CanvasRenderingContext2D, leftIris:IrisInf
   context.drawImage(rightIris.irisBitmap, rightIris.x.update(), rightIris.y.update());
 }
   
-function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number) {
+function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number, _width:number, _height:number) {
   const { preRenderContext, currentEmotion, emotionals, backBitmap, lidsBitmap, baseOffsets, leftIris, rightIris } = componentState as EyesComponentState;
   const { backOffsetX, backOffsetY, lidsOffsetX, lidsOffsetY } = baseOffsets;
   const { innerMaskBitmap, overlayBitmap } = emotionals[currentEmotion];
   
   const lidsOpenOffset = _calcLidOpenOffsetAndUpdateState(componentState);
 
+  // TODO - add width/height scaling.
   clearContext(preRenderContext);
   preRenderContext.save();
   preRenderContext.globalCompositeOperation = 'source-over';
@@ -300,7 +301,7 @@ function _onBoundingDimensions(_componentState:any):[width:number, height:number
 export const EYES_PART_TYPE = 'eyes';
 
 export async function loadEyesComponent(initData:EyesInitData):Promise<CanvasComponent> {
-  const component = new CanvasComponent(EYES_PART_TYPE, _onLoad, _onRender, _onBoundingDimensions);
+  const component = new CanvasComponent(_onLoad, _onRender, _onBoundingDimensions);
   await component.load(initData);
   return component;
 } 

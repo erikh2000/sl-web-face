@@ -40,9 +40,9 @@ async function _onLoad(initData:any):Promise<any> {
   return { headBitmap };
 }
 
-function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number) {
+function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number, width:number, height:number) {
   const { headBitmap } = componentState as HeadComponentState;
-  context.drawImage(headBitmap, x, y);
+  context.drawImage(headBitmap, x, y, width, height);
 }
 
 function _onBoundingDimensions(componentState:any):[width:number, height:number] {
@@ -53,7 +53,7 @@ function _onBoundingDimensions(componentState:any):[width:number, height:number]
 export const HEAD_PART_TYPE = 'head';
 
 export async function loadHeadComponent(initData:HeadInitData):Promise<CanvasComponent> {
-  const component = new CanvasComponent(HEAD_PART_TYPE, _onLoad, _onRender, _onBoundingDimensions);
+  const component = new CanvasComponent(_onLoad, _onRender, _onBoundingDimensions);
   await component.load(initData);
   return component;
 }

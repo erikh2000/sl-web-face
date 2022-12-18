@@ -94,9 +94,9 @@ function _mouthComponentStateToBitmap(mouthComponentState:MouthComponentState) {
   return currentViseme === Viseme.REST ? emotionBitmaps[currentEmotion] : visemeBitmaps[currentViseme-1];
 } 
 
-function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number) {
+function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number, width:number, height:number) {
   const bitmap = _mouthComponentStateToBitmap(componentState);
-  context.drawImage(bitmap, x, y);
+  context.drawImage(bitmap, x, y, width, height);
 }
 
 function _onBoundingDimensions(_componentState:any):[width:number, height:number] {
@@ -106,7 +106,7 @@ function _onBoundingDimensions(_componentState:any):[width:number, height:number
 export const MOUTH_PART_TYPE = 'mouth';
 
 export async function loadMouthComponent(initData:MouthInitData):Promise<CanvasComponent> {
-  const component = new CanvasComponent(MOUTH_PART_TYPE, _onLoad, _onRender, _onBoundingDimensions);
+  const component = new CanvasComponent(_onLoad, _onRender, _onBoundingDimensions);
   await component.load(initData);
   return component;
 }

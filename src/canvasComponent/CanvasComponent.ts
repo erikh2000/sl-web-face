@@ -18,7 +18,7 @@ function _renderComponentWithChildrenAt(context:CanvasRenderingContext2D, compon
 }
 
 interface IRenderCallback {
-  (componentState:any, context:CanvasRenderingContext2D, x:number, y:number):void
+  (componentState:any, context:CanvasRenderingContext2D, x:number, y:number, width:number, height:number):void
 }
 
 interface ILoadCallback {
@@ -27,11 +27,13 @@ interface ILoadCallback {
 
 interface IBoundingDimensionsCallback {
   (componentState:any):[width:number, height:number];
-} 
+}
 
 class CanvasComponent {
   private _offsetX:number;
   private _offsetY:number;
+  private _width:number;
+  private _height:number;
   private _children:CanvasComponent[];
   private _parent:CanvasComponent|null;
   private _onLoad:ILoadCallback;
@@ -42,40 +44,72 @@ class CanvasComponent {
   private _loadPromise:Promise<void>|null;
   private _isLoaded:boolean;
   
-  constructor(partType:string, onLoad:ILoadCallback, onRender:IRenderCallback, onBoundingDimensions:IBoundingDimensionsCallback) {
+  constructor(onLoad:ILoadCallback, onRender:IRenderCallback, onBoundingDimensions:IBoundingDimensionsCallback) {
     this._offsetX = this._offsetY = 0;
     this._children = [];
     this._parent = null;
     this._onLoad = onLoad;
     this._onRender = onRender;
     this._onBoundingDimensions = onBoundingDimensions;
-    this._partType = partType;
+    this._partType = 'UNLOADED';
     this._loadPromise = null;
     this._isLoaded = false;
     this._componentState = null;
+    this._width = this._height = 0;
   }
   
   async load(initData:any):Promise<void> {
     this._loadPromise = this._onLoad(initData);
     this._loadPromise.then((componentState:any) => {
+      this._partType = initData.partType;
       this._isLoaded = true;
       this._componentState = componentState;
+      const [width, height] = this._onBoundingDimensions(componentState);
+      this._width = width;
+      this._height = height;
     });
     return this._loadPromise;
   }
+  
+  get x():number {
+    const [x] = _findAbsoluteCoords(this);
+    return x;
+  }
+  
+  set x(value:number) {
+    const [oldX] = _findAbsoluteCoords(this);
+    this._offsetX += (value - oldX);
+  }
+  
+  get y():number {
+    const [,y] = _findAbsoluteCoords(this);
+    return y;
+  }
 
-  get offsetX():number {
-    return this._offsetX;
-  }
-  set offsetX(value:number) {
-    this._offsetX = value;
+  set y(value:number) {
+    const [,oldY] = _findAbsoluteCoords(this);
+    this._offsetY += (value - oldY);
   }
 
-  get offsetY():number {
-    return this._offsetY;
-  }
-  set offsetY(value:number) {
-    this._offsetY = value;
+  get offsetX():number { return this._offsetX; }
+  
+  set offsetX(value:number) { this._offsetX = value; }
+
+  get offsetY():number { return this._offsetY; }
+  
+  set offsetY(value:number) { this._offsetY = value; }
+
+  get width():number { return this._width; }
+  
+  set width(width:number) { this._width = width; }
+
+  get height():number { return this._height; }
+
+  set height(height:number) { this._height = height; }
+
+  get boundingRect():[x:number, y:number, width:number, height:number] {
+    const [x,y] = _findAbsoluteCoords(this);
+    return [x, y, this._width, this._height];
   }
 
   get children():CanvasComponent[] {
@@ -117,33 +151,17 @@ class CanvasComponent {
   render(context:CanvasRenderingContext2D) {
     if (!this._isLoaded) return;
     const [x,y] = _findAbsoluteCoords(this);
-    this._onRender(this._componentState, context, x, y);
+    this._onRender(this._componentState, context, x, y, this._width, this._height);
   }
   
   renderAt(context:CanvasRenderingContext2D, x:number, y:number) {
     if (!this._isLoaded) return;
-    this._onRender(this._componentState, context, x, y);
+    this._onRender(this._componentState, context, x, y, this._width, this._height);
   }
   
   renderWithChildren(context:CanvasRenderingContext2D) {
     const [x,y] = _findAbsoluteCoords(this);
     _renderComponentWithChildrenAt(context, this, x, y);
-  }
-  
-  get width():number {
-    const [width] = this._onBoundingDimensions(this._componentState);
-    return width;
-  }
-
-  get height():number {
-    const [, height] = this._onBoundingDimensions(this._componentState);
-    return height;
-  }
-  
-  get boundingRect():[x:number, y:number, width:number, height:number] {
-    const [width, height] = this._onBoundingDimensions(this._componentState);
-    const [x,y] = _findAbsoluteCoords(this);
-    return [x, y, width, height];
   }
 }
 

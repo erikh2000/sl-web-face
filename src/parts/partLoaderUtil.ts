@@ -1,10 +1,12 @@
 import {parse} from 'yaml';
 import CanvasComponent from "../canvasComponent/CanvasComponent";
-import {loadEyesComponent} from "./eyes/eyes";
-import {loadHeadComponent} from "./head/head";
-import {loadMouthComponent} from "./mouth/mouth";
+import {loadEyesComponent, EYES_PART_TYPE} from "./eyes/eyes";
+import {loadHeadComponent, HEAD_PART_TYPE} from "./head/head";
+import {loadMouthComponent, MOUTH_PART_TYPE} from "./mouth/mouth";
 import {SkinTone} from "../faces/SkinTone";
 import {createRecolorProfileForSkinTone} from "../rendering/recolorUtil";
+
+export { EYES_PART_TYPE, HEAD_PART_TYPE, MOUTH_PART_TYPE };
 
 async function _loadComponentInitDataFromUrl(url:string):Promise<any> {
   const response = await fetch(url);
@@ -19,9 +21,9 @@ type PartTypeToLoaderFuncMap = {
 }
 
 const partTypeToLoaderFunc:PartTypeToLoaderFuncMap = {
-  'eyes':loadEyesComponent,
-  'head':loadHeadComponent,
-  'mouth':loadMouthComponent
+  [EYES_PART_TYPE]:loadEyesComponent,
+  [HEAD_PART_TYPE]:loadHeadComponent,
+  [MOUTH_PART_TYPE]:loadMouthComponent
 };
 
 async function _loadCanvasComponentForPartType(partType:string, initData:any):Promise<CanvasComponent> {
