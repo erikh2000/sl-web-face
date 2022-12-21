@@ -11,11 +11,32 @@ function _findAbsoluteCoords(component:CanvasComponent):number[] {
   return [x,y];
 }
 
-function _renderComponentWithChildrenAt(context:CanvasRenderingContext2D, component:CanvasComponent, x:number, y:number) {
-  if (component.isLoaded) component.renderAt(context, x, y);
+function _findAbsoluteX(component:CanvasComponent):number {
+  let x = 0;
+  let seekComponent:CanvasComponent|null = component;
+  while(seekComponent !== null) {
+    x += seekComponent.offsetX;
+    seekComponent = seekComponent.parent;
+  }
+  return x;
+}
+
+function _findAbsoluteY(component:CanvasComponent):number {
+  let y = 0;
+  let seekComponent:CanvasComponent|null = component;
+  while(seekComponent !== null) {
+    y += seekComponent.offsetY;
+    seekComponent = seekComponent.parent;
+  }
+  return y;
+}
+
+function _renderComponentWithChildrenAt(context:CanvasRenderingContext2D, component:CanvasComponent, x:number, y:number, renderUi:boolean) {
+  if (!component.isLoaded || !component.isVisible) return;
+  if (component.isUi === renderUi) component.renderSelfAt(context, x, y);
   const children = component.children;
   children.forEach(child => {
-    _renderComponentWithChildrenAt(context, child, x+child.offsetX, y+child.offsetY);
+    _renderComponentWithChildrenAt(context, child, x+child.offsetX, y+child.offsetY, renderUi);
   });
 }
 
@@ -36,6 +57,7 @@ export const UI_PREFIX = 'ui:';
 class CanvasComponent {
   private _offsetX:number;
   private _offsetY:number;
+  private _isVisible:boolean;
   private _width:number;
   private _height:number;
   private _children:CanvasComponent[];
@@ -56,6 +78,7 @@ class CanvasComponent {
     this._onLoad = onLoad;
     this._onRender = onRender;
     this._onBoundingDimensions = onBoundingDimensions;
+    this._isVisible = true;
     this._loadPromise = null;
     this._isLoaded = false;
     this._componentState = null;
@@ -78,25 +101,23 @@ class CanvasComponent {
     return this._loadPromise;
   }
   
-  get x():number {
-    const [x] = _findAbsoluteCoords(this);
-    return x;
-  }
+  get x():number { return _findAbsoluteX(this); }
   
   set x(value:number) {
-    const [oldX] = _findAbsoluteCoords(this);
+    const oldX = _findAbsoluteX(this);
     this._offsetX += (value - oldX);
   }
   
-  get y():number {
-    const [,y] = _findAbsoluteCoords(this);
-    return y;
-  }
+  get y():number { return _findAbsoluteY(this); }
 
   set y(value:number) {
-    const [,oldY] = _findAbsoluteCoords(this);
+    const oldY = _findAbsoluteY(this);
     this._offsetY += (value - oldY);
   }
+  
+  get isVisible():boolean { return this._isVisible; }
+  
+  set isVisible(value:boolean) { this._isVisible = value; }
 
   get offsetX():number { return this._offsetX; }
   
@@ -162,20 +183,19 @@ class CanvasComponent {
     return this._isLoaded;
   }
   
-  render(context:CanvasRenderingContext2D) {
-    if (!this._isLoaded) return;
-    const [x,y] = _findAbsoluteCoords(this);
+  renderSelfAt(context:CanvasRenderingContext2D, x:number, y:number) {
     this._onRender(this._componentState, context, x, y, this._width, this._height);
   }
   
   renderAt(context:CanvasRenderingContext2D, x:number, y:number) {
-    if (!this._isLoaded) return;
-    this._onRender(this._componentState, context, x, y, this._width, this._height);
+    if (!this._isLoaded || !this._isVisible) return;
+    _renderComponentWithChildrenAt(context, this, x, y, false);
+    _renderComponentWithChildrenAt(context, this, x, y, true);
   }
   
-  renderWithChildren(context:CanvasRenderingContext2D) {
+  render(context:CanvasRenderingContext2D) {
     const [x,y] = _findAbsoluteCoords(this);
-    _renderComponentWithChildrenAt(context, this, x, y);
+    this.renderAt(context, x, y);
   }
 }
 

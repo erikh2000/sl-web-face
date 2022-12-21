@@ -1,10 +1,11 @@
-import {parse} from 'yaml';
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 import {loadEyesComponent, EYES_PART_TYPE} from "./eyes/eyes";
+import {SkinTone, skinToneToName} from "../faces/SkinTone";
 import {loadHeadComponent, HEAD_PART_TYPE} from "./head/head";
 import {loadMouthComponent, MOUTH_PART_TYPE} from "./mouth/mouth";
-import {SkinTone} from "../faces/SkinTone";
 import {createRecolorProfileForSkinTone} from "../rendering/recolorUtil";
+
+import {parse} from 'yaml';
 
 export { EYES_PART_TYPE, HEAD_PART_TYPE, MOUTH_PART_TYPE };
 
@@ -40,7 +41,7 @@ function _concatDefaultSpriteSheetUrl(partUrl:string) {
 
 export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone = SkinTone.ORIGINAL):Promise<CanvasComponent> {
   const initData = await _loadComponentInitDataFromUrl(partUrl);
-  initData.skinTone = skinTone;
+  initData.skinTone = skinToneToName(skinTone);
   initData.recolorProfile = createRecolorProfileForSkinTone(skinTone, initData.skinToneOverrides);
   initData.partUrl = partUrl;
   const { partType, spriteSheetUrl } = initData;
