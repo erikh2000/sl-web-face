@@ -273,14 +273,13 @@ function _drawIrisesAndUpdate(context:CanvasRenderingContext2D, leftIris:IrisInf
   context.drawImage(rightIris.irisBitmap, rightIris.x.update(), rightIris.y.update());
 }
   
-function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number, _width:number, _height:number) {
-  const { preRenderContext, currentEmotion, emotionals, backBitmap, lidsBitmap, baseOffsets, leftIris, rightIris } = componentState as EyesComponentState;
+function _onRender(componentState:any, context:CanvasRenderingContext2D, x:number, y:number, width:number, height:number) {
+  const { preRenderContext, currentEmotion, emotionals, backBitmap, lidsBitmap, baseOffsets, leftIris, rightIris  } = componentState as EyesComponentState;
   const { backOffsetX, backOffsetY, lidsOffsetX, lidsOffsetY } = baseOffsets;
   const { innerMaskBitmap, overlayBitmap } = emotionals[currentEmotion];
   
   const lidsOpenOffset = _calcLidOpenOffsetAndUpdateState(componentState);
-
-  // TODO - add width/height scaling.
+  
   clearContext(preRenderContext);
   preRenderContext.save();
   preRenderContext.globalCompositeOperation = 'source-over';
@@ -290,13 +289,11 @@ function _onRender(componentState:any, context:CanvasRenderingContext2D, x:numbe
   _drawIrisesAndUpdate(preRenderContext, leftIris, rightIris);
   preRenderContext.drawImage(lidsBitmap, lidsOffsetX, lidsOffsetY + lidsOpenOffset);
   preRenderContext.restore();
-  context.drawImage(preRenderContext.canvas, x, y);
-  context.drawImage(overlayBitmap, x, y);
+  context.drawImage(preRenderContext.canvas, x, y, width, height);
+  context.drawImage(overlayBitmap, x, y, width, height);
 }
 
-function _onBoundingDimensions(_componentState:any):[width:number, height:number] {
-  return [CX_EYES, CY_EYES];
-}
+function _onBoundingDimensions(_componentState:any):[width:number, height:number] { return [CX_EYES, CY_EYES]; }
 
 export const EYES_PART_TYPE = 'eyes';
 
