@@ -28,10 +28,7 @@ function _parsePartValue(partValue:string):Part {
 
 function _componentToPartValue(partComponent:CanvasComponent):string {
   const { partUrl, offsetX, offsetY, width, height } = partComponent;
-  if (!offsetX && !offsetY) return partUrl;
-  return (width && height) 
-    ? `${partUrl} @${offsetX},${offsetY},${width},${height}` 
-    : `${partUrl} @${offsetX},${offsetY}`;
+  return `${partUrl} @${offsetX},${offsetY},${width},${height}`;
 }
 
 async function _loadFaceDefinitionFromUrl(url:string):Promise<any> {
@@ -67,7 +64,7 @@ export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
 
 export function createFaceDocument(headComponent:CanvasComponent):FaceDocument {
   const faceDocument:FaceDocument = {
-    base: headComponent.partUrl,
+    base: _componentToPartValue(headComponent),
     skinTone: headComponent.skinTone,
     parts: []
   };
@@ -88,6 +85,11 @@ function _findComponentByPartUrl(headComponent:CanvasComponent, partUrl:string):
 
 export function updateFaceFromDocument(headComponent:CanvasComponent, document:FaceDocument) {
   // TODO skin recoloring
+  const headPart:Part = _parsePartValue(document.base);
+  if (headPart.width && headPart.height) {
+    headComponent.width = headPart.width;
+    headComponent.height = headPart.height;
+  }
   document.parts.forEach(partValue => {
     const part:Part = _parsePartValue(partValue);
     const component = _findComponentByPartUrl(headComponent, part.url);
