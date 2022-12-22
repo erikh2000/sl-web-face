@@ -7,7 +7,9 @@ import FaceDocument from "./FaceDocument";
 type Part = {
   url:string,
   offsetX:number,
-  offsetY:number
+  offsetY:number,
+  width?:number,
+  height?:number
 }
 
 function _parsePartValue(partValue:string):Part {
@@ -16,15 +18,20 @@ function _parsePartValue(partValue:string):Part {
   if (fields.length === 1) return { url, offsetX:0, offsetY:0 };
   if (fields.length !== 2) throw Error(`Unexpected "${partValue}" part value in face file.`);
   const coords = fields[1].split(',').map(field => field.trim());
-  if (coords.length !== 2) throw Error(`Unexpected offset coords format "${partValue}" in face file.`);
+  if (coords.length !== 2 && coords.length !== 4) throw Error(`Unexpected offset coords format "${partValue}" in face file.`);
   const offsetX = parseInt(coords[0]);
   const offsetY = parseInt(coords[1]);
-  return { url, offsetX, offsetY };
+  const width = coords[2] ? parseInt(coords[2]) : undefined;
+  const height = coords[3] ? parseInt(coords[3]) : undefined;
+  return { url, offsetX, offsetY, width, height };
 }
 
 function _componentToPartValue(partComponent:CanvasComponent):string {
-  const { partUrl, offsetX, offsetY }  = partComponent;
-  return (offsetX || offsetY) ? `${partUrl} @${offsetX},${offsetY}` : partUrl;
+  const { partUrl, offsetX, offsetY, width, height } = partComponent;
+  if (!offsetX && !offsetY) return partUrl;
+  return (width && height) 
+    ? `${partUrl} @${offsetX},${offsetY},${width},${height}` 
+    : `${partUrl} @${offsetX},${offsetY}`;
 }
 
 async function _loadFaceDefinitionFromUrl(url:string):Promise<any> {
@@ -50,6 +57,10 @@ export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
     childComponent.setParent(baseComponent);
     childComponent.offsetX = part.offsetX;
     childComponent.offsetY = part.offsetY;
+    if (part.width && part.height) {
+      childComponent.width = part.width;
+      childComponent.height = part.height;
+    } 
   }
   return baseComponent;
 }
@@ -83,5 +94,9 @@ export function updateFaceFromDocument(headComponent:CanvasComponent, document:F
     if (!component) return;
     component.offsetX = part.offsetX;
     component.offsetY = part.offsetY;
+    if (part.width && part.height) {
+      component.width = part.width;
+      component.height = part.height;
+    }
   });
 }
