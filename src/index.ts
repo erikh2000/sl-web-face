@@ -9,9 +9,11 @@ export { default as SpeechAudio } from './speech/SpeechAudio';
 export type { default as FaceDocument } from './faces/FaceDocument';
 
 export * from './events/thePubSub';
-export * from './speech/speechFileUtil';
 export * from './faces/faceDocumentUtil';
 export * from './parts/partLoaderUtil';
+export * from './rendering/canvasUtil';
+export * from './rendering/imageUtil';
+export * from './speech/speechFileUtil';
 
 /* This file only imports and re-exports top-level APIs and has been excluded from Jest 
    coverage reporting in package.json. Exports are tested via unit tests associated
