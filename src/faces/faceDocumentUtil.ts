@@ -1,6 +1,6 @@
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 import {parse} from "yaml";
-import {loadComponentFromPartUrl} from "../parts/partLoaderUtil";
+import {HEAD_PART_TYPE, loadComponentFromPartUrl} from "../parts/partLoaderUtil";
 import {nameToSkinTone, SkinTone} from "./SkinTone";
 import FaceDocument from "./FaceDocument";
 
@@ -74,31 +74,42 @@ export function createFaceDocument(headComponent:CanvasComponent):FaceDocument {
 }
 
 function _findComponentByPartUrl(headComponent:CanvasComponent, partUrl:string):CanvasComponent|null {
-  const children = headComponent.findNonUiChildren();
-  const childCount = children.length;
-  for(let childI = 0; childI < childCount; ++childI) {
-    const child = children[childI];
-    if (child.partUrl === partUrl) return child;
-  }
-  return null;
+  return headComponent.children.find(child => child.partUrl === partUrl) ?? null;
 }
 
-export function updateFaceFromDocument(headComponent:CanvasComponent, document:FaceDocument) {
-  // TODO skin recoloring
+function _findComponentByPartType(headComponent:CanvasComponent, partType:string):CanvasComponent|null {
+  return headComponent.children.find(child => child.partType === partType) ?? null;
+}
+
+export async function updateFaceFromDocument(headComponent:CanvasComponent, document:FaceDocument):Promise<CanvasComponent> {
   const headPart:Part = _parsePartValue(document.base);
+  const skinTone = nameToSkinTone(headComponent.skinTone);
+  const isRecoloring = document.skinTone !== headComponent.skinTone;
+  
+  if (headComponent.partUrl !== headPart.url || isRecoloring) headComponent = await loadComponentFromPartUrl(headPart.url, skinTone);
   if (headPart.width && headPart.height) {
     headComponent.width = headPart.width;
     headComponent.height = headPart.height;
   }
-  document.parts.forEach(partValue => {
+  
+  for(let partNo = 0; partNo < document.parts.length; ++partNo) {
+    const partValue = document.parts[partNo]; 
     const part:Part = _parsePartValue(partValue);
-    const component = _findComponentByPartUrl(headComponent, part.url);
-    if (!component) return;
+    let component = _findComponentByPartUrl(headComponent, part.url);
+    if (isRecoloring || !component) {
+      const nextComponent = await loadComponentFromPartUrl(part.url, skinTone);
+      const replaceComponent = _findComponentByPartType(headComponent, nextComponent.partType);
+      if (replaceComponent) replaceComponent.setParent(null);
+      if (nextComponent.partType !== HEAD_PART_TYPE) nextComponent.setParent(headComponent);
+      component = nextComponent;
+    }
     component.offsetX = part.offsetX;
     component.offsetY = part.offsetY;
     if (part.width && part.height) {
       component.width = part.width;
       component.height = part.height;
     }
-  });
+  }
+  
+  return headComponent;
 }

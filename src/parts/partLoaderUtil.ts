@@ -1,6 +1,6 @@
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 import {loadEyesComponent, EYES_PART_TYPE} from "./eyes/eyes";
-import {SkinTone, skinToneToName} from "../faces/SkinTone";
+import {SkinTone, skinToneToName, nameToSkinTone} from "../faces/SkinTone";
 import {loadHeadComponent, HEAD_PART_TYPE} from "./head/head";
 import {loadMouthComponent, MOUTH_PART_TYPE} from "./mouth/mouth";
 import {loadNoseComponent, NOSE_PART_TYPE} from "./nose/nose";
@@ -50,3 +50,15 @@ export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone
   if (!spriteSheetUrl) initData.spriteSheetUrl = _concatDefaultSpriteSheetUrl(partUrl);
   return _loadCanvasComponentForPartType(partType, initData);
 }
+
+export async function replaceComponentFromPartUrl(originalComponent:CanvasComponent, partUrl:string):Promise<CanvasComponent> {
+  const skinTone = nameToSkinTone(originalComponent.skinTone);
+  const nextComponent = await loadComponentFromPartUrl(partUrl, skinTone);
+  nextComponent.offsetX = originalComponent.offsetX;
+  nextComponent.offsetY = originalComponent.offsetY;
+  nextComponent.width = originalComponent.width;
+  nextComponent.height = originalComponent.height;
+  nextComponent.setParent(originalComponent.parent);
+  originalComponent.setParent(null);
+  return nextComponent;
+} 
