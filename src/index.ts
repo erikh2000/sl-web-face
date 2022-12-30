@@ -10,6 +10,7 @@ export type { default as FaceDocument } from './faces/FaceDocument';
 
 export * from './events/thePubSub';
 export * from './faces/faceDocumentUtil';
+export * from './faces/SkinTone';
 export * from './parts/partLoaderUtil';
 export * from './rendering/canvasUtil';
 export * from './rendering/imageUtil';
