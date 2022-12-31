@@ -226,6 +226,13 @@ function _calcIrisTargetAndUpdateState(eyesComponentState:EyesComponentState) {
   rightIris.y.setTarget(rightIrisY, IRIS_MOVE_DURATION);
 }
 
+function _initIrisPositions(leftIris:IrisInfo, rightIris:IrisInfo) {
+  leftIris.x.value = leftIris.x.target;
+  leftIris.y.value = leftIris.y.target;
+  rightIris.x.value = rightIris.x.target;
+  rightIris.y.value = rightIris.y.target;
+}
+
 async function _onLoad(initData:any):Promise<any> {
   const preRenderContext = createOffScreenContext(CX_EYES, CY_EYES);
   const { spriteSheetUrl, recolorProfile } = initData as EyesInitData;
@@ -244,6 +251,7 @@ async function _onLoad(initData:any):Promise<any> {
     preRenderContext
   };
   _calcIrisTargetAndUpdateState(eyesComponentState);
+  _initIrisPositions(eyesComponentState.leftIris, eyesComponentState.rightIris);
   
   subscribeEvent(Topic.EMOTION, (event:any) => eyesComponentState.currentEmotion = event as Emotion);
   subscribeEvent(Topic.ATTENTION, (event:any) => {

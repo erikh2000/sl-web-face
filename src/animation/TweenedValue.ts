@@ -73,6 +73,8 @@ class TweenedValue {
     this._isComplete = true;
     this._value = value;
   }
+  
+  get target():number { return this._toValue; }
 }
 
 export default TweenedValue;
