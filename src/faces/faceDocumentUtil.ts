@@ -92,9 +92,11 @@ export async function updateFaceFromDocument(headComponent:CanvasComponent, docu
     headComponent.height = headPart.height;
   }
   
+  const partUrls:string[] = [];
   for(let partNo = 0; partNo < document.parts.length; ++partNo) {
     const partValue = document.parts[partNo]; 
     const part:Part = _parsePartValue(partValue);
+    partUrls.push(part.url);
     let component = _findComponentByPartUrl(headComponent, part.url);
     if (isRecoloring || !component) {
       const nextComponent = await loadComponentFromPartUrl(part.url, skinTone);
@@ -109,6 +111,12 @@ export async function updateFaceFromDocument(headComponent:CanvasComponent, docu
       component.width = part.width;
       component.height = part.height;
     }
+  }
+
+  for(let childNo = 0; childNo < headComponent.children.length; ++childNo) {
+    const child = headComponent.children[childNo];
+    if (child.isUi) continue;
+    if (!partUrls.includes(child.partUrl)) child.setParent(null);
   }
   
   return headComponent;
