@@ -51,14 +51,27 @@ export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone
   return _loadCanvasComponentForPartType(partType, initData);
 }
 
+function _copyComponentProperties(fromComponent:CanvasComponent, toComponent:CanvasComponent) {
+  toComponent.offsetX = fromComponent.offsetX;
+  toComponent.offsetY = fromComponent.offsetY;
+  toComponent.width = fromComponent.width;
+  toComponent.height = fromComponent.height;
+  toComponent.setParent(fromComponent.parent);
+}
+
 export async function replaceComponentFromPartUrl(originalComponent:CanvasComponent, partUrl:string):Promise<CanvasComponent> {
   const skinTone = nameToSkinTone(originalComponent.skinTone);
   const nextComponent = await loadComponentFromPartUrl(partUrl, skinTone);
-  nextComponent.offsetX = originalComponent.offsetX;
-  nextComponent.offsetY = originalComponent.offsetY;
-  nextComponent.width = originalComponent.width;
-  nextComponent.height = originalComponent.height;
-  nextComponent.setParent(originalComponent.parent);
+  _copyComponentProperties(originalComponent, nextComponent);
   originalComponent.setParent(null);
   return nextComponent;
-} 
+}
+
+export async function recolorComponent(originalComponent:CanvasComponent, skinTone:SkinTone):Promise<CanvasComponent> {
+  const originalSkinTone = nameToSkinTone(originalComponent.skinTone);
+  if (originalSkinTone === skinTone) return originalComponent;
+  const nextComponent = await loadComponentFromPartUrl(originalComponent.partUrl, skinTone);
+  _copyComponentProperties(originalComponent, nextComponent);
+  originalComponent.setParent(null);
+  return nextComponent;
+}

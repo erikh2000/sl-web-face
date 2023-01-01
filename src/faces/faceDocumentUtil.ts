@@ -83,10 +83,10 @@ function _findComponentByPartType(headComponent:CanvasComponent, partType:string
 
 export async function updateFaceFromDocument(headComponent:CanvasComponent, document:FaceDocument):Promise<CanvasComponent> {
   const headPart:Part = _parsePartValue(document.base);
-  const skinTone = nameToSkinTone(headComponent.skinTone);
+  const documentSkinTone = nameToSkinTone(document.skinTone);
   const isRecoloring = document.skinTone !== headComponent.skinTone;
   
-  if (headComponent.partUrl !== headPart.url || isRecoloring) headComponent = await loadComponentFromPartUrl(headPart.url, skinTone);
+  if (headComponent.partUrl !== headPart.url || isRecoloring) headComponent = await loadComponentFromPartUrl(headPart.url, documentSkinTone);
   if (headPart.width && headPart.height) {
     headComponent.width = headPart.width;
     headComponent.height = headPart.height;
@@ -99,7 +99,7 @@ export async function updateFaceFromDocument(headComponent:CanvasComponent, docu
     partUrls.push(part.url);
     let component = _findComponentByPartUrl(headComponent, part.url);
     if (isRecoloring || !component) {
-      const nextComponent = await loadComponentFromPartUrl(part.url, skinTone);
+      const nextComponent = await loadComponentFromPartUrl(part.url, documentSkinTone);
       const replaceComponent = _findComponentByPartType(headComponent, nextComponent.partType);
       if (replaceComponent) replaceComponent.setParent(null);
       if (nextComponent.partType !== HEAD_PART_TYPE) nextComponent.setParent(headComponent);
