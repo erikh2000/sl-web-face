@@ -1,6 +1,12 @@
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 import {parse} from "yaml";
-import {HEAD_PART_TYPE, loadComponentFromPartUrl} from "../parts/partLoaderUtil";
+import {
+  EYES_PART_TYPE,
+  HEAD_PART_TYPE,
+  loadComponentFromPartUrl,
+  MOUTH_PART_TYPE,
+  NOSE_PART_TYPE, sortHeadChildrenInDrawingOrder
+} from "../parts/partLoaderUtil";
 import {nameToSkinTone, SkinTone} from "./SkinTone";
 import FaceDocument from "./FaceDocument";
 
@@ -59,6 +65,7 @@ export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
       childComponent.height = part.height;
     } 
   }
+  sortHeadChildrenInDrawingOrder(baseComponent);
   return baseComponent;
 }
 
@@ -118,6 +125,8 @@ export async function updateFaceFromDocument(headComponent:CanvasComponent, docu
     if (child.isUi) continue;
     if (!partUrls.includes(child.partUrl)) child.setParent(null);
   }
+
+  sortHeadChildrenInDrawingOrder(headComponent);
   
   return headComponent;
 }

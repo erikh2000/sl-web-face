@@ -59,10 +59,25 @@ function _copyComponentProperties(fromComponent:CanvasComponent, toComponent:Can
   toComponent.setParent(fromComponent.parent);
 }
 
+export type PartTypeToDrawOrderMap = {
+  [partTypeName: string]: number;
+}
+const partTypeToDrawOrderMap:PartTypeToDrawOrderMap = {
+  [HEAD_PART_TYPE]: 0,
+  [EYES_PART_TYPE]: 100,
+  [MOUTH_PART_TYPE]: 200,
+  [NOSE_PART_TYPE]: 300
+};
+
+export function sortHeadChildrenInDrawingOrder(headComponent:CanvasComponent) {
+  headComponent.children.sort((a:CanvasComponent, b:CanvasComponent) => partTypeToDrawOrderMap[a.partType] - partTypeToDrawOrderMap[b.partType]);
+}
+
 export async function replaceComponentFromPartUrl(originalComponent:CanvasComponent, partUrl:string):Promise<CanvasComponent> {
   const skinTone = nameToSkinTone(originalComponent.skinTone);
   const nextComponent = await loadComponentFromPartUrl(partUrl, skinTone);
   _copyComponentProperties(originalComponent, nextComponent);
+  if (nextComponent.parent?.partType === HEAD_PART_TYPE) sortHeadChildrenInDrawingOrder(nextComponent.parent);
   originalComponent.setParent(null);
   return nextComponent;
 }
@@ -72,6 +87,7 @@ export async function recolorComponent(originalComponent:CanvasComponent, skinTo
   if (originalSkinTone === skinTone) return originalComponent;
   const nextComponent = await loadComponentFromPartUrl(originalComponent.partUrl, skinTone);
   _copyComponentProperties(originalComponent, nextComponent);
+  if (nextComponent.parent?.partType === HEAD_PART_TYPE) sortHeadChildrenInDrawingOrder(nextComponent.parent);
   originalComponent.setParent(null);
   return nextComponent;
 }
