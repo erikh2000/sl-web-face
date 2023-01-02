@@ -1,6 +1,6 @@
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 import {EYES_PART_TYPE, loadEyesComponent} from "./eyes/eyes";
-import {nameToSkinTone, SkinTone, skinToneToName} from "../faces/SkinTone";
+import {SkinTone, skinToneToName} from "../faces/SkinTone";
 import {HEAD_PART_TYPE, loadHeadComponent} from "./head/head";
 import {loadMouthComponent, MOUTH_PART_TYPE} from "./mouth/mouth";
 import {loadNoseComponent, NOSE_PART_TYPE} from "./nose/nose";
@@ -77,8 +77,7 @@ export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone
 }
 
 export async function replaceComponentFromPartUrl(originalComponent:CanvasComponent, partUrl:string):Promise<CanvasComponent> {
-  const skinTone = nameToSkinTone(originalComponent.skinTone);
-  const hairColor = nameToHairColor(originalComponent.hairColor);
+  const { skinTone, hairColor } = originalComponent;
   const nextComponent = await loadComponentFromPartUrl(partUrl, skinTone, hairColor);
   _copyComponentProperties(originalComponent, nextComponent);
   if (nextComponent.parent?.partType === HEAD_PART_TYPE) sortHeadChildrenInDrawingOrder(nextComponent.parent);
@@ -87,9 +86,7 @@ export async function replaceComponentFromPartUrl(originalComponent:CanvasCompon
 }
 
 export async function recolorComponent(originalComponent:CanvasComponent, skinTone:SkinTone, hairColor:HairColor):Promise<CanvasComponent> {
-  const originalSkinTone = nameToSkinTone(originalComponent.skinTone);
-  const originalHairColor = nameToHairColor(originalComponent.hairColor);
-  if (originalSkinTone === skinTone && originalHairColor === hairColor) return originalComponent;
+  if (originalComponent.skinTone === skinTone && originalComponent.hairColor === hairColor) return originalComponent;
   const nextComponent = await loadComponentFromPartUrl(originalComponent.partUrl, skinTone, hairColor);
   _copyComponentProperties(originalComponent, nextComponent);
   if (nextComponent.parent?.partType === HEAD_PART_TYPE) sortHeadChildrenInDrawingOrder(nextComponent.parent);

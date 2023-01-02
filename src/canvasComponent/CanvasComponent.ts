@@ -1,3 +1,6 @@
+import HairColor, {nameToHairColor} from "../faces/HairColor";
+import {nameToSkinTone, SkinTone} from "../faces/SkinTone";
+
 export const UNLOADED = 'UNLOADED';
 
 function _findAbsoluteCoords(component:CanvasComponent):number[] {
@@ -54,22 +57,42 @@ interface IBoundingDimensionsCallback {
 
 export const UI_PREFIX = 'ui:';
 
+function _getHairColor(hairColorName?:string):HairColor {
+  try {
+    if (!hairColorName) return HairColor.ORIGINAL;
+    return nameToHairColor(hairColorName);
+  } catch(_ignored) {
+    return HairColor.ORIGINAL;
+  }
+}
+
+function _getSkinTone(skinToneName?:string):SkinTone {
+  try {
+    if (!skinToneName) return SkinTone.ORIGINAL;
+    return nameToSkinTone(skinToneName);
+  } catch(_ignored) {
+    return SkinTone.ORIGINAL;
+  }
+}
+
 class CanvasComponent {
+  private _children:CanvasComponent[];
+  private _componentState:any;
+  private _hairColor:HairColor;
+  private _height:number;
+  private _initData:any;
+  private _isLoaded:boolean;
+  private _isUi:boolean;
+  private _isVisible:boolean;
+  private _loadPromise:Promise<void>|null;
   private _offsetX:number;
   private _offsetY:number;
-  private _isVisible:boolean;
-  private _width:number;
-  private _height:number;
-  private _children:CanvasComponent[];
+  private readonly _onBoundingDimensions:IBoundingDimensionsCallback;
+  private readonly _onLoad:ILoadCallback;
+  private readonly _onRender:IRenderCallback;
   private _parent:CanvasComponent|null;
-  private _onLoad:ILoadCallback;
-  private _onRender:IRenderCallback;
-  private _onBoundingDimensions:IBoundingDimensionsCallback;
-  private _componentState:any;
-  private _loadPromise:Promise<void>|null;
-  private _isLoaded:boolean;
-  private _initData:any;
-  private _isUi:boolean;
+  private _skinTone:SkinTone;
+  private _width:number;
   
   constructor(onLoad:ILoadCallback, onRender:IRenderCallback, onBoundingDimensions:IBoundingDimensionsCallback) {
     this._offsetX = this._offsetY = 0;
@@ -85,6 +108,8 @@ class CanvasComponent {
     this._initData = null;
     this._isUi = false;
     this._width = this._height = 0;
+    this._hairColor = HairColor.ORIGINAL;
+    this._skinTone = SkinTone.ORIGINAL;
   }
   
   async load(initData:any):Promise<void> {
@@ -97,6 +122,8 @@ class CanvasComponent {
       this._width = width;
       this._height = height;
       this._isUi = initData.partType.startsWith(UI_PREFIX);
+      this._hairColor = _getHairColor(initData.hairColor);
+      this._skinTone = _getSkinTone(initData.skinTone);
     });
     return this._loadPromise;
   }
@@ -148,9 +175,9 @@ class CanvasComponent {
   
   get partUrl():string { return this._initData ? this._initData.partUrl : UNLOADED; }
   
-  get skinTone():string { return this._initData ? this._initData.skinTone : UNLOADED; }
+  get skinTone():SkinTone { return this._skinTone }
 
-  get hairColor():string { return this._initData ? this._initData.hairColor : UNLOADED; }
+  get hairColor():HairColor { return this._hairColor; }
   
   get initData():any { return this._initData; }
   
