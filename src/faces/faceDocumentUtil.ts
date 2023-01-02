@@ -1,12 +1,6 @@
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 import {parse} from "yaml";
-import {
-  EYES_PART_TYPE,
-  HEAD_PART_TYPE,
-  loadComponentFromPartUrl,
-  MOUTH_PART_TYPE,
-  NOSE_PART_TYPE, sortHeadChildrenInDrawingOrder
-} from "../parts/partLoaderUtil";
+import { HEAD_PART_TYPE, loadComponentFromPartUrl, sortHeadChildrenInDrawingOrder } from "../parts/partLoaderUtil";
 import {nameToSkinTone, SkinTone} from "./SkinTone";
 import FaceDocument from "./FaceDocument";
 import {nameToHairColor} from "./HairColor";
@@ -97,7 +91,7 @@ export async function updateFaceFromDocument(headComponent:CanvasComponent, docu
   const documentHairColor = nameToHairColor(document.hairColor);
   const isRecoloring = document.skinTone !== headComponent.skinTone || document.hairColor !== headComponent.hairColor;
   
-  if (headComponent.partUrl !== headPart.url || isRecoloring) headComponent = await loadComponentFromPartUrl(headPart.url, documentSkinTone);
+  if (headComponent.partUrl !== headPart.url || isRecoloring) headComponent = await loadComponentFromPartUrl(headPart.url, documentSkinTone, documentHairColor);
   if (headPart.width && headPart.height) {
     headComponent.width = headPart.width;
     headComponent.height = headPart.height;
