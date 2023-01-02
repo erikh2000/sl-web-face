@@ -1,12 +1,13 @@
 import CanvasComponent from "../canvasComponent/CanvasComponent";
-import {loadEyesComponent, EYES_PART_TYPE} from "./eyes/eyes";
-import {SkinTone, skinToneToName, nameToSkinTone} from "../faces/SkinTone";
-import {loadHeadComponent, HEAD_PART_TYPE} from "./head/head";
+import {EYES_PART_TYPE, loadEyesComponent} from "./eyes/eyes";
+import {nameToSkinTone, SkinTone, skinToneToName} from "../faces/SkinTone";
+import {HEAD_PART_TYPE, loadHeadComponent} from "./head/head";
 import {loadMouthComponent, MOUTH_PART_TYPE} from "./mouth/mouth";
 import {loadNoseComponent, NOSE_PART_TYPE} from "./nose/nose";
 import {createRecolorProfileForSkinTone} from "../rendering/recolorUtil";
 
 import {parse} from 'yaml';
+import HairColor, {hairColorToName, nameToHairColor} from "../faces/HairColor";
 
 export { EYES_PART_TYPE, HEAD_PART_TYPE, MOUTH_PART_TYPE, NOSE_PART_TYPE };
 
@@ -41,16 +42,6 @@ function _concatDefaultSpriteSheetUrl(partUrl:string) {
   return `${baseUrl}.png`;
 }
 
-export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone = SkinTone.ORIGINAL):Promise<CanvasComponent> {
-  const initData = await _loadComponentInitDataFromUrl(partUrl);
-  initData.skinTone = skinToneToName(skinTone);
-  initData.recolorProfile = createRecolorProfileForSkinTone(skinTone, initData.skinToneOverrides);
-  initData.partUrl = partUrl;
-  const { partType, spriteSheetUrl } = initData;
-  if (!spriteSheetUrl) initData.spriteSheetUrl = _concatDefaultSpriteSheetUrl(partUrl);
-  return _loadCanvasComponentForPartType(partType, initData);
-}
-
 function _copyComponentProperties(fromComponent:CanvasComponent, toComponent:CanvasComponent) {
   toComponent.offsetX = fromComponent.offsetX;
   toComponent.offsetY = fromComponent.offsetY;
@@ -70,22 +61,36 @@ const partTypeToDrawOrderMap:PartTypeToDrawOrderMap = {
 };
 
 export function sortHeadChildrenInDrawingOrder(headComponent:CanvasComponent) {
-  headComponent.children.sort((a:CanvasComponent, b:CanvasComponent) => partTypeToDrawOrderMap[a.partType] - partTypeToDrawOrderMap[b.partType]);
+  headComponent.children.sort((a:CanvasComponent, b:CanvasComponent) => 
+    partTypeToDrawOrderMap[a.partType] - partTypeToDrawOrderMap[b.partType]);
+}
+
+export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone = SkinTone.ORIGINAL, hairColor:HairColor = HairColor.ORIGINAL):Promise<CanvasComponent> {
+  const initData = await _loadComponentInitDataFromUrl(partUrl);
+  initData.skinTone = skinToneToName(skinTone);
+  initData.recolorProfile = createRecolorProfileForSkinTone(skinTone, initData.skinToneOverrides); // TODO recolor profile for hair color, separate from skin.
+  initData.hairColor = hairColorToName(hairColor);
+  initData.partUrl = partUrl;
+  const { partType, spriteSheetUrl } = initData;
+  if (!spriteSheetUrl) initData.spriteSheetUrl = _concatDefaultSpriteSheetUrl(partUrl);
+  return _loadCanvasComponentForPartType(partType, initData);
 }
 
 export async function replaceComponentFromPartUrl(originalComponent:CanvasComponent, partUrl:string):Promise<CanvasComponent> {
   const skinTone = nameToSkinTone(originalComponent.skinTone);
-  const nextComponent = await loadComponentFromPartUrl(partUrl, skinTone);
+  const hairColor = nameToHairColor(originalComponent.hairColor);
+  const nextComponent = await loadComponentFromPartUrl(partUrl, skinTone, hairColor);
   _copyComponentProperties(originalComponent, nextComponent);
   if (nextComponent.parent?.partType === HEAD_PART_TYPE) sortHeadChildrenInDrawingOrder(nextComponent.parent);
   originalComponent.setParent(null);
   return nextComponent;
 }
 
-export async function recolorComponent(originalComponent:CanvasComponent, skinTone:SkinTone):Promise<CanvasComponent> {
+export async function recolorComponent(originalComponent:CanvasComponent, skinTone:SkinTone, hairColor:HairColor):Promise<CanvasComponent> {
   const originalSkinTone = nameToSkinTone(originalComponent.skinTone);
-  if (originalSkinTone === skinTone) return originalComponent;
-  const nextComponent = await loadComponentFromPartUrl(originalComponent.partUrl, skinTone);
+  const originalHairColor = nameToHairColor(originalComponent.hairColor);
+  if (originalSkinTone === skinTone && originalHairColor === hairColor) return originalComponent;
+  const nextComponent = await loadComponentFromPartUrl(originalComponent.partUrl, skinTone, hairColor);
   _copyComponentProperties(originalComponent, nextComponent);
   if (nextComponent.parent?.partType === HEAD_PART_TYPE) sortHeadChildrenInDrawingOrder(nextComponent.parent);
   originalComponent.setParent(null);

@@ -9,8 +9,9 @@ export { default as SpeechAudio } from './speech/SpeechAudio';
 export type { default as FaceDocument } from './faces/FaceDocument';
 
 export * from './events/thePubSub';
-export * from './faces/faceDocumentUtil';
+export * from './faces/HairColor';
 export * from './faces/SkinTone';
+export * from './faces/faceDocumentUtil';
 export * from './parts/partLoaderUtil';
 export * from './rendering/canvasUtil';
 export * from './rendering/imageUtil';

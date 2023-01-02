@@ -149,6 +149,8 @@ class CanvasComponent {
   get partUrl():string { return this._initData ? this._initData.partUrl : UNLOADED; }
   
   get skinTone():string { return this._initData ? this._initData.skinTone : UNLOADED; }
+
+  get hairColor():string { return this._initData ? this._initData.hairColor : UNLOADED; }
   
   get initData():any { return this._initData; }
   

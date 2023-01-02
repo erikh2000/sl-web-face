@@ -9,6 +9,7 @@ import {
 } from "../parts/partLoaderUtil";
 import {nameToSkinTone, SkinTone} from "./SkinTone";
 import FaceDocument from "./FaceDocument";
+import {nameToHairColor} from "./HairColor";
 
 type Part = {
   url:string,
@@ -53,10 +54,11 @@ export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
   const faceDefinition = await _loadFaceDefinitionFromUrl(faceUrl);
   const { base, parts } = faceDefinition;
   const skinTone = nameToSkinTone(faceDefinition.skinTone);
-  const baseComponent = await loadComponentFromPartUrl(base.url, skinTone);
+  const hairColor = nameToHairColor(faceDefinition.hairColor);
+  const baseComponent = await loadComponentFromPartUrl(base.url, skinTone, hairColor);
   for(let partI = 0; partI < parts.length; ++partI) {
     const part = parts[partI];
-    const childComponent = await loadComponentFromPartUrl(part.url, skinTone);
+    const childComponent = await loadComponentFromPartUrl(part.url, skinTone, hairColor);
     childComponent.setParent(baseComponent);
     childComponent.offsetX = part.offsetX;
     childComponent.offsetY = part.offsetY;
@@ -73,6 +75,7 @@ export function createFaceDocument(headComponent:CanvasComponent):FaceDocument {
   const faceDocument:FaceDocument = {
     base: _componentToPartValue(headComponent),
     skinTone: headComponent.skinTone,
+    hairColor: headComponent.hairColor,
     parts: []
   };
   const headParts = headComponent.findNonUiChildren();
@@ -91,7 +94,8 @@ function _findComponentByPartType(headComponent:CanvasComponent, partType:string
 export async function updateFaceFromDocument(headComponent:CanvasComponent, document:FaceDocument):Promise<CanvasComponent> {
   const headPart:Part = _parsePartValue(document.base);
   const documentSkinTone = nameToSkinTone(document.skinTone);
-  const isRecoloring = document.skinTone !== headComponent.skinTone;
+  const documentHairColor = nameToHairColor(document.hairColor);
+  const isRecoloring = document.skinTone !== headComponent.skinTone || document.hairColor !== headComponent.hairColor;
   
   if (headComponent.partUrl !== headPart.url || isRecoloring) headComponent = await loadComponentFromPartUrl(headPart.url, documentSkinTone);
   if (headPart.width && headPart.height) {
@@ -106,7 +110,7 @@ export async function updateFaceFromDocument(headComponent:CanvasComponent, docu
     partUrls.push(part.url);
     let component = _findComponentByPartUrl(headComponent, part.url);
     if (isRecoloring || !component) {
-      const nextComponent = await loadComponentFromPartUrl(part.url, documentSkinTone);
+      const nextComponent = await loadComponentFromPartUrl(part.url, documentSkinTone, documentHairColor);
       const replaceComponent = _findComponentByPartType(headComponent, nextComponent.partType);
       if (replaceComponent) replaceComponent.setParent(null);
       if (nextComponent.partType !== HEAD_PART_TYPE) nextComponent.setParent(headComponent);
