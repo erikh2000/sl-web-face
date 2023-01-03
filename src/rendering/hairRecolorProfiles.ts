@@ -274,26 +274,26 @@ const PURPLISH_RED_DARK_PROFILE:RecolorProfile = {
 };
 
 const SILVER_LIGHT_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
-  adjustSaturationPercent:.7,
-  adjustValuePercent:null,
-  adjustContrastPercent:1,
+  adjustHueDegrees:-38,
+  adjustSaturationPercent:.23,
+  adjustValuePercent:1,
+  adjustContrastPercent:1.33,
   adjustContrastBrightnessThreshold:20
 };
 
 const SILVER_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
-  adjustSaturationPercent:.7,
-  adjustValuePercent:null,
+  adjustHueDegrees:-16,
+  adjustSaturationPercent:.99,
+  adjustValuePercent:.86,
   adjustContrastPercent:1,
   adjustContrastBrightnessThreshold:20
 };
 
 const SILVER_DARK_PROFILE:RecolorProfile = {
-  adjustHueDegrees:150,
-  adjustSaturationPercent:1,
-  adjustValuePercent:.9,
-  adjustContrastPercent:1.5,
+  adjustHueDegrees:-18,
+  adjustSaturationPercent:1.9, //1.2 - 2
+  adjustValuePercent:.6,
+  adjustContrastPercent:1,
   adjustContrastBrightnessThreshold:20
 };
 
