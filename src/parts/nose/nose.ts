@@ -6,7 +6,7 @@ import {RecolorProfile} from "../../rendering/RecolorProfile";
 
 export type NoseInitData = {
   spriteSheetUrl:string,
-  recolorProfile:RecolorProfile|null
+  skinRecolorProfile:RecolorProfile|null
 }
 
 type NoseComponentState = {
@@ -19,12 +19,12 @@ async function _loadNoseBitmap(spriteSheetUrl:string):Promise<ImageBitmap> {
 }
 
 async function _onLoad(initData:any):Promise<any> {
-  const { spriteSheetUrl, recolorProfile } = initData as NoseInitData;
+  const { spriteSheetUrl, skinRecolorProfile } = initData as NoseInitData;
   let noseBitmap = await _loadNoseBitmap(spriteSheetUrl);
-  if (!recolorProfile) return { noseBitmap };
+  if (!skinRecolorProfile) return { noseBitmap };
 
   const preRenderContext = createOffScreenContext(noseBitmap.width, noseBitmap.height);
-  const recoloredBitmap = await recolorBitmapByProfile(noseBitmap, recolorProfile, preRenderContext);
+  const recoloredBitmap = await recolorBitmapByProfile(noseBitmap, skinRecolorProfile, preRenderContext);
   return { noseBitmap:recoloredBitmap } as NoseComponentState;
 }
 

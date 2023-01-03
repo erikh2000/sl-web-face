@@ -172,61 +172,61 @@ const CLOWN_RED_PROFILE:RecolorProfile = {
 const CLOWN_RED_DARK_PROFILE:RecolorProfile = {
   adjustHueDegrees:142,
   adjustSaturationPercent:8,
-  adjustValuePercent:.72, //.7 - .75
+  adjustValuePercent:.72,
   adjustContrastPercent:1,
   adjustContrastBrightnessThreshold:20
 };
 
 const BLOOD_ORANGE_LIGHT_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
-  adjustSaturationPercent:.7,
-  adjustValuePercent:null,
-  adjustContrastPercent:1,
+  adjustHueDegrees:162,
+  adjustSaturationPercent:2.8,
+  adjustValuePercent:1,
+  adjustContrastPercent:1.1,
   adjustContrastBrightnessThreshold:20
 };
 
 const BLOOD_ORANGE_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
-  adjustSaturationPercent:.7,
-  adjustValuePercent:null,
-  adjustContrastPercent:1,
+  adjustHueDegrees:157,
+  adjustSaturationPercent:3.7,
+  adjustValuePercent:1,
+  adjustContrastPercent:1.2,
   adjustContrastBrightnessThreshold:20
 };
 
 const BLOOD_ORANGE_DARK_PROFILE:RecolorProfile = {
-  adjustHueDegrees:150,
-  adjustSaturationPercent:1,
+  adjustHueDegrees:158,
+  adjustSaturationPercent:5.6,
   adjustValuePercent:.9,
-  adjustContrastPercent:1.5,
-  adjustContrastBrightnessThreshold:20
-};
-
-const PINK_LIGHT_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
-  adjustSaturationPercent:.7,
-  adjustValuePercent:null,
   adjustContrastPercent:1,
   adjustContrastBrightnessThreshold:20
 };
 
+const PINK_LIGHT_PROFILE:RecolorProfile = {
+  adjustHueDegrees:115,
+  adjustSaturationPercent:1.6,
+  adjustValuePercent:1,
+  adjustContrastPercent:1.1,
+  adjustContrastBrightnessThreshold:20
+};
+
 const PINK_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
-  adjustSaturationPercent:.7,
-  adjustValuePercent:null,
+  adjustHueDegrees:104,
+  adjustSaturationPercent:2.85,
+  adjustValuePercent:1,
   adjustContrastPercent:1,
   adjustContrastBrightnessThreshold:20
 };
 
 const PINK_DARK_PROFILE:RecolorProfile = {
-  adjustHueDegrees:150,
-  adjustSaturationPercent:1,
-  adjustValuePercent:.9,
-  adjustContrastPercent:1.5,
+  adjustHueDegrees:119,
+  adjustSaturationPercent:5.8,
+  adjustValuePercent:.49,
+  adjustContrastPercent:1,
   adjustContrastBrightnessThreshold:20
 };
 
 const ROYAL_PURPLE_LIGHT_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
+  adjustHueDegrees:60,
   adjustSaturationPercent:.7,
   adjustValuePercent:null,
   adjustContrastPercent:1,
@@ -234,7 +234,7 @@ const ROYAL_PURPLE_LIGHT_PROFILE:RecolorProfile = {
 };
 
 const ROYAL_PURPLE_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
+  adjustHueDegrees:60,
   adjustSaturationPercent:.7,
   adjustValuePercent:null,
   adjustContrastPercent:1,
@@ -242,7 +242,7 @@ const ROYAL_PURPLE_PROFILE:RecolorProfile = {
 };
 
 const ROYAL_PURPLE_DARK_PROFILE:RecolorProfile = {
-  adjustHueDegrees:150,
+  adjustHueDegrees:60,
   adjustSaturationPercent:1,
   adjustValuePercent:.9,
   adjustContrastPercent:1.5,
@@ -250,7 +250,7 @@ const ROYAL_PURPLE_DARK_PROFILE:RecolorProfile = {
 };
 
 const PURPLISH_RED_LIGHT_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
+  adjustHueDegrees:60,
   adjustSaturationPercent:.7,
   adjustValuePercent:null,
   adjustContrastPercent:1,
@@ -258,7 +258,7 @@ const PURPLISH_RED_LIGHT_PROFILE:RecolorProfile = {
 };
 
 const PURPLISH_RED_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
+  adjustHueDegrees:70,
   adjustSaturationPercent:.7,
   adjustValuePercent:null,
   adjustContrastPercent:1,
@@ -266,7 +266,7 @@ const PURPLISH_RED_PROFILE:RecolorProfile = {
 };
 
 const PURPLISH_RED_DARK_PROFILE:RecolorProfile = {
-  adjustHueDegrees:150,
+  adjustHueDegrees:80,
   adjustSaturationPercent:1,
   adjustValuePercent:.9,
   adjustContrastPercent:1.5,

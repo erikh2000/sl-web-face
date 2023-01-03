@@ -186,7 +186,8 @@ async function _loadBitmaps(spriteSheetUrl:string, preRenderContext:CanvasRender
 
 export type EyesInitData = {
   spriteSheetUrl:string,
-  recolorProfile:RecolorProfile|null,
+  skinRecolorProfile:RecolorProfile|null,
+  hairRecolorProfile:RecolorProfile|null,
   backOffsetX?:number,
   backOffsetY?:number,
   lidsOffsetX?:number,
@@ -235,8 +236,8 @@ function _initIrisPositions(leftIris:IrisInfo, rightIris:IrisInfo) {
 
 async function _onLoad(initData:any):Promise<any> {
   const preRenderContext = createOffScreenContext(CX_EYES, CY_EYES);
-  const { spriteSheetUrl, recolorProfile } = initData as EyesInitData;
-  const { emotionals, backBitmap, leftIris, rightIris, lidsBitmap } = await _loadBitmaps(spriteSheetUrl, preRenderContext, recolorProfile);
+  const { spriteSheetUrl, skinRecolorProfile } = initData as EyesInitData;
+  const { emotionals, backBitmap, leftIris, rightIris, lidsBitmap } = await _loadBitmaps(spriteSheetUrl, preRenderContext, skinRecolorProfile);
   const currentEmotion = Emotion.NEUTRAL;
   const restingLidLevel = LidLevel.NORMAL;
   const attentionDx = 0, attentionDy = 0;

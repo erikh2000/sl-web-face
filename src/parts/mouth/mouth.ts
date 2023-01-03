@@ -65,7 +65,8 @@ async function _loadVisemeAndEmotionBitmaps(faceSheetUrl:string, recolorProfile:
 
 export type MouthInitData = {
   spriteSheetUrl:string,
-  recolorProfile:RecolorProfile|null
+  skinRecolorProfile:RecolorProfile|null,
+  hairRecolorProfile:RecolorProfile|null
 }
 
 type MouthComponentState = {
@@ -76,8 +77,8 @@ type MouthComponentState = {
 }
 
 async function _onLoad(initData:any):Promise<any> {
-  const { spriteSheetUrl, recolorProfile } = initData as MouthInitData;
-  const { visemeBitmaps, emotionBitmaps } = await _loadVisemeAndEmotionBitmaps(spriteSheetUrl, recolorProfile);
+  const { spriteSheetUrl, skinRecolorProfile } = initData as MouthInitData;
+  const { visemeBitmaps, emotionBitmaps } = await _loadVisemeAndEmotionBitmaps(spriteSheetUrl, skinRecolorProfile);
   const mouthComponentState:MouthComponentState = {
     emotionBitmaps,
     visemeBitmaps, 
