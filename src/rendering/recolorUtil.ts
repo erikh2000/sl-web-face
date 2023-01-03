@@ -1,8 +1,10 @@
-import {imageBitmapToImageData} from "./imageUtil";
-import {RecolorProfile} from "./RecolorProfile";
-import {SkinTone, skinToneToName} from "../faces/SkinTone";
-import {skinToneToRecolorProfile} from "./defaultRecolorProfiles";
-import {adjustContrast, hsvToRgb, rgbToHsv} from "./colorUtil";
+import {adjustContrast, hsvToRgb, rgbToHsv} from  "./colorUtil";
+import {hairColorToRecolorProfile} from           "./hairRecolorProfiles";
+import {imageBitmapToImageData} from              "./imageUtil";
+import {RecolorProfile} from                      "./RecolorProfile";
+import {skinToneToRecolorProfile} from            "./skinRecolorProfiles";
+import HairColor from                             "../faces/HairColor";
+import {SkinTone} from                            "../faces/SkinTone";
 
 const PIXEL_SIZE = 4;
 
@@ -39,12 +41,12 @@ export async function recolorBitmapByProfile(imageBitmap:ImageBitmap, recolorPro
   return createImageBitmap(recoloredImageData);
 }
 
-export function createRecolorProfileForSkinTone(skinTone:SkinTone, skinToneOverrides:any):RecolorProfile|null {
+export function createRecolorProfileForSkinTone(skinTone:SkinTone):RecolorProfile|null {
   const recolorProfile = skinToneToRecolorProfile(skinTone);
-  if (skinToneOverrides) {
-    const skinToneName = skinToneToName(skinTone);
-    const override = skinToneOverrides[skinToneName];
-    if (override) return override;
-  }
   return skinTone === SkinTone.ORIGINAL ? null : recolorProfile;
+}
+
+export function createRecolorProfileForHairColor(hairColor:HairColor):RecolorProfile|null {
+  const recolorProfile = hairColorToRecolorProfile(hairColor);
+  return hairColor === HairColor.ORIGINAL ? null : recolorProfile;
 }

@@ -6,7 +6,8 @@ import {RecolorProfile} from "../../rendering/RecolorProfile";
 
 export type HeadInitData = {
   spriteSheetUrl:string,
-  recolorProfile:RecolorProfile|null
+  skinRecolorProfile:RecolorProfile|null,
+  hairRecolorProfile:RecolorProfile|null
 }
 
 type HeadComponentState = {
@@ -15,27 +16,44 @@ type HeadComponentState = {
 
 async function _loadHeadBitmap(spriteSheetUrl:string):Promise<ImageBitmap[]> {
   const image = await loadImage(spriteSheetUrl);
-  const width = image.width / 2, height = image.height;
+  const width = image.width / 3, height = image.height;
   return [
     await createImageBitmap(image, 0, 0, width, height),
-    await createImageBitmap(image, width, 0, width, height)
+    await createImageBitmap(image, width, 0, width, height),
+    await createImageBitmap(image, width*2, 0, width, height),
   ];
 }
 
 async function _onLoad(initData:any):Promise<any> {
-  const { spriteSheetUrl, recolorProfile } = initData as HeadInitData;
-  let [originalHeadBitmap, skinMaskBitmap] = await _loadHeadBitmap(spriteSheetUrl);
-  if (!recolorProfile) return { headBitmap:originalHeadBitmap };
+  const { spriteSheetUrl, skinRecolorProfile, hairRecolorProfile } = initData as HeadInitData;
+  let [originalHeadBitmap, skinMaskBitmap, hairMaskBitmap] = await _loadHeadBitmap(spriteSheetUrl);
+  if (!hairRecolorProfile || !skinRecolorProfile) return { headBitmap:originalHeadBitmap };
   
+  const maskContext = createOffScreenContext(originalHeadBitmap.width, originalHeadBitmap.height);
   const preRenderContext = createOffScreenContext(originalHeadBitmap.width, originalHeadBitmap.height);
-  const recoloredBitmap = await recolorBitmapByProfile(originalHeadBitmap, recolorProfile, preRenderContext);
+  let skinRecoloredBitmap:ImageBitmap|null = null, hairRecoloredBitmap:ImageBitmap|null = null;
+  if (skinRecolorProfile) skinRecoloredBitmap = await recolorBitmapByProfile(originalHeadBitmap, skinRecolorProfile, preRenderContext);
+  if (hairRecolorProfile) hairRecoloredBitmap = await recolorBitmapByProfile(originalHeadBitmap, hairRecolorProfile, preRenderContext);
   clearContext(preRenderContext);
-  preRenderContext.globalCompositeOperation = 'source-over';
-  preRenderContext.drawImage(skinMaskBitmap, 0, 0);
-  preRenderContext.globalCompositeOperation = 'source-in';
-  preRenderContext.drawImage(recoloredBitmap, 0, 0);
+  clearContext(maskContext);
   preRenderContext.globalCompositeOperation = 'destination-over';
+  if (skinRecoloredBitmap) {
+    maskContext.globalCompositeOperation = 'source-over';
+    maskContext.drawImage(skinMaskBitmap, 0, 0);
+    maskContext.globalCompositeOperation = 'source-in';
+    maskContext.drawImage(skinRecoloredBitmap, 0, 0);
+    preRenderContext.drawImage(maskContext.canvas, 0, 0);
+  }
+  if (hairRecoloredBitmap) {
+    maskContext.globalCompositeOperation = 'source-over';
+    maskContext.drawImage(hairMaskBitmap, 0, 0);
+    maskContext.globalCompositeOperation = 'source-in';
+    maskContext.drawImage(hairRecoloredBitmap, 0, 0);
+    maskContext.globalCompositeOperation = 'destination-over';
+    preRenderContext.drawImage(maskContext.canvas, 0, 0);
+  }
   preRenderContext.drawImage(originalHeadBitmap, 0, 0);
+  
   const headBitmap = await contextToImageBitmap(preRenderContext);
   return { headBitmap };
 }

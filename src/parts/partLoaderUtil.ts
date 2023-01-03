@@ -4,10 +4,10 @@ import {SkinTone, skinToneToName} from "../faces/SkinTone";
 import {HEAD_PART_TYPE, loadHeadComponent} from "./head/head";
 import {loadMouthComponent, MOUTH_PART_TYPE} from "./mouth/mouth";
 import {loadNoseComponent, NOSE_PART_TYPE} from "./nose/nose";
-import {createRecolorProfileForSkinTone} from "../rendering/recolorUtil";
+import {createRecolorProfileForHairColor, createRecolorProfileForSkinTone} from "../rendering/recolorUtil";
 
 import {parse} from 'yaml';
-import HairColor, {hairColorToName, nameToHairColor} from "../faces/HairColor";
+import HairColor, {hairColorToName} from "../faces/HairColor";
 
 export { EYES_PART_TYPE, HEAD_PART_TYPE, MOUTH_PART_TYPE, NOSE_PART_TYPE };
 
@@ -68,8 +68,9 @@ export function sortHeadChildrenInDrawingOrder(headComponent:CanvasComponent) {
 export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone = SkinTone.ORIGINAL, hairColor:HairColor = HairColor.ORIGINAL):Promise<CanvasComponent> {
   const initData = await _loadComponentInitDataFromUrl(partUrl);
   initData.skinTone = skinToneToName(skinTone);
-  initData.recolorProfile = createRecolorProfileForSkinTone(skinTone, initData.skinToneOverrides); // TODO recolor profile for hair color, separate from skin.
+  initData.skinRecolorProfile = createRecolorProfileForSkinTone(skinTone);
   initData.hairColor = hairColorToName(hairColor);
+  initData.hairRecolorProfile = createRecolorProfileForHairColor(hairColor);
   initData.partUrl = partUrl;
   const { partType, spriteSheetUrl } = initData;
   if (!spriteSheetUrl) initData.spriteSheetUrl = _concatDefaultSpriteSheetUrl(partUrl);
