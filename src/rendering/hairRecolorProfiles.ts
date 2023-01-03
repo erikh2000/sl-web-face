@@ -291,33 +291,33 @@ const SILVER_PROFILE:RecolorProfile = {
 
 const SILVER_DARK_PROFILE:RecolorProfile = {
   adjustHueDegrees:-18,
-  adjustSaturationPercent:1.9, //1.2 - 2
+  adjustSaturationPercent:1.9,
   adjustValuePercent:.6,
   adjustContrastPercent:1,
   adjustContrastBrightnessThreshold:20
 };
 
 const MUSTARD_LIGHT_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
-  adjustSaturationPercent:.7,
-  adjustValuePercent:null,
-  adjustContrastPercent:1,
+  adjustHueDegrees:175,
+  adjustSaturationPercent:3.5,
+  adjustValuePercent:1,
+  adjustContrastPercent:1.28,
   adjustContrastBrightnessThreshold:20
 };
 
 const MUSTARD_PROFILE:RecolorProfile = {
-  adjustHueDegrees:140,
-  adjustSaturationPercent:.7,
-  adjustValuePercent:null,
-  adjustContrastPercent:1,
+  adjustHueDegrees:176,
+  adjustSaturationPercent:5.5,
+  adjustValuePercent:1,
+  adjustContrastPercent:1.27,
   adjustContrastBrightnessThreshold:20
 };
 
 const MUSTARD_DARK_PROFILE:RecolorProfile = {
-  adjustHueDegrees:150,
-  adjustSaturationPercent:1,
-  adjustValuePercent:.9,
-  adjustContrastPercent:1.5,
+  adjustHueDegrees:175,
+  adjustSaturationPercent:10,
+  adjustValuePercent:1,
+  adjustContrastPercent:.65,
   adjustContrastBrightnessThreshold:20
 };
 
