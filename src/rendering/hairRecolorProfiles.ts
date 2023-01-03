@@ -250,26 +250,26 @@ const ROYAL_PURPLE_DARK_PROFILE:RecolorProfile = {
 };
 
 const PURPLISH_RED_LIGHT_PROFILE:RecolorProfile = {
-  adjustHueDegrees:60,
-  adjustSaturationPercent:.7,
-  adjustValuePercent:null,
+  adjustHueDegrees:134,
+  adjustSaturationPercent:4.2,
+  adjustValuePercent:.97,
   adjustContrastPercent:1,
   adjustContrastBrightnessThreshold:20
 };
 
 const PURPLISH_RED_PROFILE:RecolorProfile = {
-  adjustHueDegrees:70,
-  adjustSaturationPercent:.7,
-  adjustValuePercent:null,
+  adjustHueDegrees:134,
+  adjustSaturationPercent:5,
+  adjustValuePercent:.75,
   adjustContrastPercent:1,
   adjustContrastBrightnessThreshold:20
 };
 
 const PURPLISH_RED_DARK_PROFILE:RecolorProfile = {
-  adjustHueDegrees:80,
-  adjustSaturationPercent:1,
-  adjustValuePercent:.9,
-  adjustContrastPercent:1.5,
+  adjustHueDegrees:136,
+  adjustSaturationPercent:6.9,
+  adjustValuePercent:.5,
+  adjustContrastPercent:1,
   adjustContrastBrightnessThreshold:20
 };
 
