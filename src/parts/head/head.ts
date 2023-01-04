@@ -27,7 +27,7 @@ async function _loadHeadBitmap(spriteSheetUrl:string):Promise<ImageBitmap[]> {
 async function _onLoad(initData:any):Promise<any> {
   const { spriteSheetUrl, skinRecolorProfile, hairRecolorProfile } = initData as HeadInitData;
   let [originalHeadBitmap, skinMaskBitmap, hairMaskBitmap] = await _loadHeadBitmap(spriteSheetUrl);
-  if (!hairRecolorProfile || !skinRecolorProfile) return { headBitmap:originalHeadBitmap };
+  if (!hairRecolorProfile && !skinRecolorProfile) return { headBitmap:originalHeadBitmap };
   
   const maskContext = createOffScreenContext(originalHeadBitmap.width, originalHeadBitmap.height);
   const preRenderContext = createOffScreenContext(originalHeadBitmap.width, originalHeadBitmap.height);
