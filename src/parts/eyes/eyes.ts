@@ -57,7 +57,7 @@ type EyesComponentState = EyesBitmaps & {
   preRenderContext:CanvasRenderingContext2D
 }
 
-const X_EYES = 0, CX_EYES = 256, CY_EYES = 128, X_SKIN_MASK = CX_EYES;
+const X_EYES = 0, CX_EYES = 256, CY_EYES = 128, X_SKIN_MASK = CX_EYES, X_HAIR_MASK = CX_EYES * 2;
 const Y_EMOTION_EYES = 0;
 const Y_BACK = 11*CY_EYES;
 const Y_IRISES = 12*CY_EYES;
@@ -68,25 +68,49 @@ const BLINK_DURATION = 200;
 const LID_LEVEL_CHANGE_DURATION = 200;
 const IRIS_MOVE_DURATION = 200;
 
-async function _imageToOverlayBitmap(image:HTMLImageElement, emotion:Emotion):Promise<ImageBitmap[]> {
+async function _imageToOverlayBitmap(image:HTMLImageElement, emotion:Emotion):Promise<[ImageBitmap, ImageBitmap, ImageBitmap]> {
+  const y = Y_EMOTION_EYES+(emotion*CY_EYES);
   return [
-    await createImageBitmap(image, X_EYES, Y_EMOTION_EYES+(emotion*CY_EYES), CX_EYES, CY_EYES),
-    await createImageBitmap(image, X_SKIN_MASK, Y_EMOTION_EYES+(emotion*CY_EYES), CX_EYES, CY_EYES)
+    await createImageBitmap(image, X_EYES, y, CX_EYES, CY_EYES),
+    await createImageBitmap(image, X_SKIN_MASK, y, CX_EYES, CY_EYES),
+    await createImageBitmap(image, X_HAIR_MASK, y, CX_EYES, CY_EYES)
   ];
 }
 
-async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion, preRenderContext:CanvasRenderingContext2D, recolorProfile:RecolorProfile|null):Promise<Emotional> {
-  const [originalBitmap, skinMaskBitmap] = await _imageToOverlayBitmap(image, emotion);
+async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion, maskContext:CanvasRenderingContext2D, 
+    preRenderContext:CanvasRenderingContext2D, skinRecolorProfile:RecolorProfile|null, 
+    hairRecolorProfile:RecolorProfile|null):Promise<Emotional> {
+  const [originalBitmap, skinMaskBitmap, hairMaskBitmap] = await _imageToOverlayBitmap(image, emotion);
 
   let overlayBitmap:ImageBitmap|null;
-  if (recolorProfile) {
-    const recoloredBitmap = await recolorBitmapByProfile(originalBitmap, recolorProfile, preRenderContext);
-    clearContext(preRenderContext);
-    preRenderContext.globalCompositeOperation = 'source-over';
-    preRenderContext.drawImage(skinMaskBitmap, 0, 0);
-    preRenderContext.globalCompositeOperation = 'source-in';
-    preRenderContext.drawImage(recoloredBitmap, 0, 0);
-    preRenderContext.globalCompositeOperation = 'destination-over';
+  
+  const isRecoloring = skinRecolorProfile !== null || hairRecolorProfile !== null;
+  let skinRecoloredBitmap:ImageBitmap|null = null, hairRecoloredBitmap:ImageBitmap|null = null;
+
+  // Perform recoloring here instead of below, so that preRenderContext can be used to
+  // combine skin and hair without being affected by the recoloring use of preRenderContext.
+  if (skinRecolorProfile) skinRecoloredBitmap = await recolorBitmapByProfile(originalBitmap, skinRecolorProfile, preRenderContext);
+  if (hairRecolorProfile) hairRecoloredBitmap = await recolorBitmapByProfile(originalBitmap, hairRecolorProfile, preRenderContext);
+
+  clearContext(preRenderContext);
+  clearContext(maskContext);
+  preRenderContext.globalCompositeOperation = 'destination-over';
+  if (skinRecoloredBitmap) {
+    maskContext.globalCompositeOperation = 'source-over';
+    maskContext.drawImage(skinMaskBitmap, 0, 0);
+    maskContext.globalCompositeOperation = 'source-in';
+    maskContext.drawImage(skinRecoloredBitmap, 0, 0);
+    preRenderContext.drawImage(maskContext.canvas, 0, 0);
+  }
+  if (hairRecoloredBitmap) {
+    maskContext.globalCompositeOperation = 'source-over';
+    maskContext.drawImage(hairMaskBitmap, 0, 0);
+    maskContext.globalCompositeOperation = 'source-in';
+    maskContext.drawImage(hairRecoloredBitmap, 0, 0);
+    preRenderContext.drawImage(maskContext.canvas, 0, 0);
+  }
+  
+  if (isRecoloring) {
     preRenderContext.drawImage(originalBitmap, 0, 0);
     overlayBitmap = await contextToImageBitmap(preRenderContext);
   } else {
@@ -115,10 +139,12 @@ async function _generateEmotionalData(image:HTMLImageElement, emotion:Emotion, p
   } as Emotional;
 }
 
-async function _generateEmotionals(image:HTMLImageElement, preRenderContext:CanvasRenderingContext2D, recolorProfile:RecolorProfile|null):Promise<Emotional[]> {
+async function _generateEmotionals(image:HTMLImageElement, maskContext:CanvasRenderingContext2D, 
+    preRenderContext:CanvasRenderingContext2D, skinRecolorProfile:RecolorProfile|null, 
+    hairRecolorProfile:RecolorProfile|null):Promise<Emotional[]> {
   const promises:Promise<Emotional>[] = [];
   for(let emotionI = 0; emotionI < Emotion.COUNT; ++emotionI) {
-    promises.push(_generateEmotionalData(image, emotionI, preRenderContext, recolorProfile));
+    promises.push(_generateEmotionalData(image, emotionI, maskContext, preRenderContext, skinRecolorProfile, hairRecolorProfile));
   }
   return await Promise.all(promises);
 }
@@ -172,12 +198,14 @@ async function _imageToLidsBitmap(image:HTMLImageElement, recolorProfile:Recolor
   return contextToImageBitmap(preRenderContext);
 }
 
-async function _loadBitmaps(spriteSheetUrl:string, preRenderContext:CanvasRenderingContext2D, recolorProfile:RecolorProfile|null):Promise<EyesBitmaps> {
+async function _loadBitmaps(spriteSheetUrl:string, maskContext:CanvasRenderingContext2D, 
+    preRenderContext:CanvasRenderingContext2D, skinRecolorProfile:RecolorProfile|null,
+    hairRecolorProfile:RecolorProfile|null):Promise<EyesBitmaps> {
   const image = await loadImage(spriteSheetUrl);
   const [leftIris, rightIris] = await _imageToLeftAndRightIrises(image, preRenderContext);
-  const lidsBitmap = await _imageToLidsBitmap(image, recolorProfile, preRenderContext);
+  const lidsBitmap = await _imageToLidsBitmap(image, skinRecolorProfile, preRenderContext);
   return {
-    emotionals: await _generateEmotionals(image, preRenderContext, recolorProfile),
+    emotionals: await _generateEmotionals(image, maskContext, preRenderContext, skinRecolorProfile, hairRecolorProfile),
     backBitmap: await _imageToBackBitmap(image),
     leftIris, rightIris,
     lidsBitmap
@@ -236,8 +264,10 @@ function _initIrisPositions(leftIris:IrisInfo, rightIris:IrisInfo) {
 
 async function _onLoad(initData:any):Promise<any> {
   const preRenderContext = createOffScreenContext(CX_EYES, CY_EYES);
-  const { spriteSheetUrl, skinRecolorProfile } = initData as EyesInitData;
-  const { emotionals, backBitmap, leftIris, rightIris, lidsBitmap } = await _loadBitmaps(spriteSheetUrl, preRenderContext, skinRecolorProfile);
+  const maskContext = createOffScreenContext(CX_EYES, CY_EYES);
+  const { spriteSheetUrl, skinRecolorProfile, hairRecolorProfile } = initData as EyesInitData;
+  const { emotionals, backBitmap, leftIris, rightIris, lidsBitmap } = 
+    await _loadBitmaps(spriteSheetUrl, maskContext, preRenderContext, skinRecolorProfile, hairRecolorProfile);
   const currentEmotion = Emotion.NEUTRAL;
   const restingLidLevel = LidLevel.NORMAL;
   const attentionDx = 0, attentionDy = 0;

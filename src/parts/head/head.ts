@@ -32,8 +32,12 @@ async function _onLoad(initData:any):Promise<any> {
   const maskContext = createOffScreenContext(originalHeadBitmap.width, originalHeadBitmap.height);
   const preRenderContext = createOffScreenContext(originalHeadBitmap.width, originalHeadBitmap.height);
   let skinRecoloredBitmap:ImageBitmap|null = null, hairRecoloredBitmap:ImageBitmap|null = null;
+  
+  // Perform recoloring here instead of below, so that preRenderContext can be used to
+  // combine skin and hair without being affected by the recoloring use of preRenderContext.
   if (skinRecolorProfile) skinRecoloredBitmap = await recolorBitmapByProfile(originalHeadBitmap, skinRecolorProfile, preRenderContext);
   if (hairRecolorProfile) hairRecoloredBitmap = await recolorBitmapByProfile(originalHeadBitmap, hairRecolorProfile, preRenderContext);
+  
   clearContext(preRenderContext);
   clearContext(maskContext);
   preRenderContext.globalCompositeOperation = 'destination-over';
@@ -49,7 +53,7 @@ async function _onLoad(initData:any):Promise<any> {
     maskContext.drawImage(hairMaskBitmap, 0, 0);
     maskContext.globalCompositeOperation = 'source-in';
     maskContext.drawImage(hairRecoloredBitmap, 0, 0);
-    maskContext.globalCompositeOperation = 'destination-over';
+    maskContext.globalCompositeOperation = 'destination-over'; // TODO---keep?
     preRenderContext.drawImage(maskContext.canvas, 0, 0);
   }
   preRenderContext.drawImage(originalHeadBitmap, 0, 0);
