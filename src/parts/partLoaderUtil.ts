@@ -61,8 +61,12 @@ const partTypeToDrawOrderMap:PartTypeToDrawOrderMap = {
 };
 
 export function sortHeadChildrenInDrawingOrder(headComponent:CanvasComponent) {
-  headComponent.children.sort((a:CanvasComponent, b:CanvasComponent) => 
-    partTypeToDrawOrderMap[a.partType] - partTypeToDrawOrderMap[b.partType]);
+  function compareParts(a:CanvasComponent, b:CanvasComponent):number {
+    if (a.isUi) return b.isUi ? 0 : 1; // Sort UI components after non-UI.
+    if (b.isUi) return -1;
+    return partTypeToDrawOrderMap[a.partType] - partTypeToDrawOrderMap[b.partType];
+  }
+  headComponent.children.sort(compareParts);
 }
 
 export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone = SkinTone.ORIGINAL, hairColor:HairColor = HairColor.ORIGINAL):Promise<CanvasComponent> {

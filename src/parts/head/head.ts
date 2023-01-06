@@ -53,7 +53,6 @@ async function _onLoad(initData:any):Promise<any> {
     maskContext.drawImage(hairMaskBitmap, 0, 0);
     maskContext.globalCompositeOperation = 'source-in';
     maskContext.drawImage(hairRecoloredBitmap, 0, 0);
-    maskContext.globalCompositeOperation = 'destination-over'; // TODO---keep?
     preRenderContext.drawImage(maskContext.canvas, 0, 0);
   }
   preRenderContext.drawImage(originalHeadBitmap, 0, 0);
