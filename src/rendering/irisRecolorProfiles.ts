@@ -66,11 +66,11 @@ const HAZEL_PROFILE:RecolorProfile = {
 };
 
 const AMBER_PROFILE:RecolorProfile = {
-  adjustHueDegrees:null,
-  adjustSaturationPercent:null,
-  adjustValuePercent:null,
-  adjustContrastPercent:null,
-  adjustContrastBrightnessThreshold:null
+  adjustHueDegrees:-196,
+  adjustSaturationPercent:5.5,
+  adjustValuePercent:.85,
+  adjustContrastPercent:1.5,
+  adjustContrastBrightnessThreshold:20
 };
 
 const LIGHT_BROWN_PROFILE:RecolorProfile = {
