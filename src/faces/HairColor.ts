@@ -89,7 +89,7 @@ const _hairColorToName = [
 if (_hairColorToName.length !== HairColor.COUNT) throw Error('Unexpected');
 
 export function hairColorToName(hairColor:HairColor) {
-  if (hairColor < HairColor.ORIGINAL || hairColor >= HairColor.COUNT) throw Error('Invalid hairColor value');
+  if (hairColor < HairColor.ORIGINAL || hairColor >= HairColor.COUNT) throw Error(`Invalid hairColor value - ${hairColor}`);
   return _hairColorToName[hairColor];
 }
 
@@ -108,7 +108,7 @@ const _nameToHairColor = _createNameToHairColorMap(_hairColorToName);
 
 export function nameToHairColor(name:string):HairColor {
   const match = _nameToHairColor[name];
-  if (match === undefined) throw Error('Invalid hair color name');
+  if (match === undefined) throw Error(`Invalid hair color name - "${name}"`);
   return match;
 }
 

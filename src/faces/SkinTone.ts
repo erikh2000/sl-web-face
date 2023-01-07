@@ -27,7 +27,7 @@ const _skinToneToName = [
   'black'
 ];
 export function skinToneToName(skinTone:SkinTone) {
-  if (skinTone < SkinTone.ORIGINAL || skinTone >= SkinTone.COUNT) throw Error('Invalid skinTone value');
+  if (skinTone < SkinTone.ORIGINAL || skinTone >= SkinTone.COUNT) throw Error(`Invalid skin tone value - ${skinTone}`); 
   return _skinToneToName[skinTone];
 }
 
@@ -46,6 +46,6 @@ const _nameToSkinTone = _createNameToSkinToneMap(_skinToneToName);
 
 export function nameToSkinTone(name:string):SkinTone {
   const match = _nameToSkinTone[name];
-  if (match === undefined) throw Error('Invalid skintone name');
+  if (match === undefined) throw Error(`Invalid skin tone name - "${name}"`);
   return match;
 }

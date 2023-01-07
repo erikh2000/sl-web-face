@@ -36,7 +36,7 @@ const _irisColorToName = [
 ];
 
 export function irisColorToName(irisColor:IrisColor):string {
-  if (irisColor < IrisColor.ORIGINAL || irisColor >= IrisColor.COUNT) throw Error('Invalid iris color value');
+  if (irisColor < IrisColor.ORIGINAL || irisColor >= IrisColor.COUNT) throw Error(`Invalid iris color value - ${irisColor}`);
   return _irisColorToName[irisColor];
 }
 
@@ -55,7 +55,7 @@ const _nameToIrisColor = _createNameToIrisColorMap(_irisColorToName);
 
 export function nameToIrisColor(name:string):IrisColor {
   const match = _nameToIrisColor[name];
-  if (match === undefined) throw Error('Invalid iris color name');
+  if (match === undefined) throw Error(`Invalid iris color name - "${name}"`);
   return match;
 }
 
