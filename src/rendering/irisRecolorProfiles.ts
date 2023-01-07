@@ -10,19 +10,19 @@ const ORIGINAL_PROFILE:RecolorProfile = {
 };
 
 const LIGHT_BLUE_PROFILE:RecolorProfile = {
-  adjustHueDegrees:40,
-  adjustSaturationPercent:10,
+  adjustHueDegrees:-23,
+  adjustSaturationPercent:2,
   adjustValuePercent:1,
-  adjustContrastPercent:1,
+  adjustContrastPercent:2,
   adjustContrastBrightnessThreshold:20
 };
 
 const BLUE_PROFILE:RecolorProfile = {
-  adjustHueDegrees:null,
-  adjustSaturationPercent:null,
-  adjustValuePercent:null,
-  adjustContrastPercent:null,
-  adjustContrastBrightnessThreshold:null
+  adjustHueDegrees:-18,
+  adjustSaturationPercent:4.8, //5
+  adjustValuePercent:1,
+  adjustContrastPercent:1.4,
+  adjustContrastBrightnessThreshold:20
 };
 
 const BLUE_GREY_PROFILE:RecolorProfile = {
