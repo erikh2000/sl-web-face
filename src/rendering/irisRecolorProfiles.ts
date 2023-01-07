@@ -19,18 +19,18 @@ const LIGHT_BLUE_PROFILE:RecolorProfile = {
 
 const BLUE_PROFILE:RecolorProfile = {
   adjustHueDegrees:-18,
-  adjustSaturationPercent:4.8, //5
+  adjustSaturationPercent:4.8,
   adjustValuePercent:1,
   adjustContrastPercent:1.4,
   adjustContrastBrightnessThreshold:20
 };
 
 const BLUE_GREY_PROFILE:RecolorProfile = {
-  adjustHueDegrees:null,
-  adjustSaturationPercent:null,
-  adjustValuePercent:null,
-  adjustContrastPercent:null,
-  adjustContrastBrightnessThreshold:null
+  adjustHueDegrees:-24,
+  adjustSaturationPercent:1.6,
+  adjustValuePercent:.8,
+  adjustContrastPercent:1.55,
+  adjustContrastBrightnessThreshold:20
 };
 
 const LIGHT_GREY_PROFILE:RecolorProfile = {
