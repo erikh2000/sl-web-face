@@ -58,11 +58,11 @@ const GREEN_PROFILE:RecolorProfile = {
 };
 
 const HAZEL_PROFILE:RecolorProfile = {
-  adjustHueDegrees:null,
-  adjustSaturationPercent:null,
-  adjustValuePercent:null,
-  adjustContrastPercent:null,
-  adjustContrastBrightnessThreshold:null
+  adjustHueDegrees:-162,
+  adjustSaturationPercent:3.6,
+  adjustValuePercent:.74,
+  adjustContrastPercent:1.5,
+  adjustContrastBrightnessThreshold:20
 };
 
 const AMBER_PROFILE:RecolorProfile = {
