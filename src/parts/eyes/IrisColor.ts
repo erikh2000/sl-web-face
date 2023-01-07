@@ -11,9 +11,6 @@ export enum IrisColor {
   AMBER,
   LIGHT_BROWN,
   BROWN,
-  DARK_BROWN,
-  BLACK,
-  ALBINO_RED,
   
   COUNT
 }
@@ -29,10 +26,7 @@ const _irisColorToName = [
   'hazel',
   'amber',
   'lightBrown',
-  'brown',
-  'darkBrown',
-  'black',
-  'albinoRed'
+  'brown'
 ];
 
 export function irisColorToName(irisColor:IrisColor):string {

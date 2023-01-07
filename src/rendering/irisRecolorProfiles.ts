@@ -75,42 +75,18 @@ const AMBER_PROFILE:RecolorProfile = {
 
 const LIGHT_BROWN_PROFILE:RecolorProfile = {
   adjustHueDegrees:-202,
-  adjustSaturationPercent:7.3, //7.2
+  adjustSaturationPercent:7.3,
   adjustValuePercent:.69,
   adjustContrastPercent:1.5,
   adjustContrastBrightnessThreshold:20
 };
 
 const BROWN_PROFILE:RecolorProfile = {
-  adjustHueDegrees:null,
-  adjustSaturationPercent:null,
-  adjustValuePercent:null,
-  adjustContrastPercent:null,
-  adjustContrastBrightnessThreshold:null
-};
-
-const DARK_BROWN_PROFILE:RecolorProfile = {
-  adjustHueDegrees:null,
-  adjustSaturationPercent:null,
-  adjustValuePercent:null,
-  adjustContrastPercent:null,
-  adjustContrastBrightnessThreshold:null
-};
-
-const BLACK_PROFILE:RecolorProfile = {
-  adjustHueDegrees:null,
-  adjustSaturationPercent:null,
-  adjustValuePercent:null,
-  adjustContrastPercent:null,
-  adjustContrastBrightnessThreshold:null
-};
-
-const ALBINO_RED_PROFILE:RecolorProfile = {
-  adjustHueDegrees:null,
-  adjustSaturationPercent:null,
-  adjustValuePercent:null,
-  adjustContrastPercent:null,
-  adjustContrastBrightnessThreshold:null
+  adjustHueDegrees:-205,
+  adjustSaturationPercent:6.7,
+  adjustValuePercent:.65,
+  adjustContrastPercent:10,
+  adjustContrastBrightnessThreshold:100
 };
 
 const _irisColorToRecolorProfile:RecolorProfile[] = [
@@ -124,10 +100,7 @@ const _irisColorToRecolorProfile:RecolorProfile[] = [
   HAZEL_PROFILE,
   AMBER_PROFILE,
   LIGHT_BROWN_PROFILE,
-  BROWN_PROFILE,
-  DARK_BROWN_PROFILE,
-  BLACK_PROFILE,
-  ALBINO_RED_PROFILE
+  BROWN_PROFILE
 ];
 
 export function irisColorToRecolorProfile(irisColor:IrisColor):RecolorProfile {

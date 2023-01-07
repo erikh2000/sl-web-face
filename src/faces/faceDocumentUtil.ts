@@ -10,7 +10,7 @@ import FaceDocument from "./FaceDocument";
 import {hairColorToName, nameToHairColor} from "./HairColor";
 
 import {parse} from "yaml";
-import IrisColor, {irisColorToName, nameToIrisColor} from "../parts/eyes/IrisColor";
+import IrisColor, {irisColorToName} from "../parts/eyes/IrisColor";
 
 type Part = {
   url:string,
@@ -56,7 +56,7 @@ export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
   const { base, parts } = faceDefinition;
   const skinTone = nameToSkinTone(faceDefinition.skinTone);
   const hairColor = nameToHairColor(faceDefinition.hairColor);
-  const irisColor = 'amber'; // faceDefinition.irisColor; TODO
+  const irisColor = faceDefinition.irisColor;
   const baseComponent = await loadComponentFromPartUrl(base.url, skinTone, hairColor);
   for(let partI = 0; partI < parts.length; ++partI) {
     const part = parts[partI];
