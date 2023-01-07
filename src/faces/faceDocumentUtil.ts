@@ -107,7 +107,7 @@ export async function updateFaceFromDocument(headComponent:CanvasComponent, docu
   const headPart:Part = _parsePartValue(document.base);
   const documentSkinTone = nameToSkinTone(document.skinTone);
   const documentHairColor = nameToHairColor(document.hairColor);
-  const documentIrisColor = _findIrisColorName(headComponent);
+  const documentIrisColor = document.irisColor;
   const isHairOrSkinRecoloring = documentSkinTone !== headComponent.skinTone || documentHairColor !== headComponent.hairColor;
   
   if (headComponent.partUrl !== headPart.url || isHairOrSkinRecoloring) headComponent = await loadComponentFromPartUrl(headPart.url, documentSkinTone, documentHairColor);
