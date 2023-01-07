@@ -91,9 +91,9 @@ export async function replaceComponentFromPartUrl(originalComponent:CanvasCompon
   return nextComponent;
 }
 
-export async function recolorComponent(originalComponent:CanvasComponent, skinTone:SkinTone, hairColor:HairColor):Promise<CanvasComponent> {
-  if (originalComponent.skinTone === skinTone && originalComponent.hairColor === hairColor) return originalComponent;
-  const nextComponent = await loadComponentFromPartUrl(originalComponent.partUrl, skinTone, hairColor);
+export async function recolorComponent(originalComponent:CanvasComponent, skinTone:SkinTone, hairColor:HairColor, initDataOverrides?:any):Promise<CanvasComponent> {
+  if (originalComponent.skinTone === skinTone && originalComponent.hairColor === hairColor && !initDataOverrides) return originalComponent;
+  const nextComponent = await loadComponentFromPartUrl(originalComponent.partUrl, skinTone, hairColor, initDataOverrides);
   _copyComponentProperties(originalComponent, nextComponent);
   if (nextComponent.parent?.partType === HEAD_PART_TYPE) sortHeadChildrenInDrawingOrder(nextComponent.parent);
   originalComponent.setParent(null);
