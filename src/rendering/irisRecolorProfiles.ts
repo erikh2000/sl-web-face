@@ -34,11 +34,11 @@ const BLUE_GREY_PROFILE:RecolorProfile = {
 };
 
 const LIGHT_GREY_PROFILE:RecolorProfile = {
-  adjustHueDegrees:null,
-  adjustSaturationPercent:null,
-  adjustValuePercent:null,
-  adjustContrastPercent:null,
-  adjustContrastBrightnessThreshold:null
+  adjustHueDegrees:-55,
+  adjustSaturationPercent:.3, // .6
+  adjustValuePercent:1,
+  adjustContrastPercent:1, //1.1
+  adjustContrastBrightnessThreshold:20
 };
 
 const GREY_PROFILE:RecolorProfile = {
