@@ -74,11 +74,11 @@ const AMBER_PROFILE:RecolorProfile = {
 };
 
 const LIGHT_BROWN_PROFILE:RecolorProfile = {
-  adjustHueDegrees:null,
-  adjustSaturationPercent:null,
-  adjustValuePercent:null,
-  adjustContrastPercent:null,
-  adjustContrastBrightnessThreshold:null
+  adjustHueDegrees:-202,
+  adjustSaturationPercent:7.3, //7.2
+  adjustValuePercent:.69,
+  adjustContrastPercent:1.5,
+  adjustContrastBrightnessThreshold:20
 };
 
 const BROWN_PROFILE:RecolorProfile = {
