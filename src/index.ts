@@ -12,6 +12,7 @@ export * from './events/thePubSub';
 export * from './faces/HairColor';
 export * from './faces/SkinTone';
 export * from './faces/faceDocumentUtil';
+export * from './parts/eyes/IrisColor';
 export * from './parts/partLoaderUtil';
 export * from './rendering/canvasUtil';
 export * from './rendering/imageUtil';

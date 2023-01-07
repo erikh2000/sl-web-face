@@ -16,6 +16,8 @@ import LidLevel from "../../events/lidLevels";
 import TweenedValue from "../../animation/TweenedValue";
 import {recolorBitmapByProfile} from "../../rendering/recolorUtil";
 import {RecolorProfile} from "../../rendering/RecolorProfile";
+import {irisColorToRecolorProfile} from "../../rendering/irisRecolorProfiles";
+import {nameToIrisColor} from "./IrisColor";
 
 type Emotional = {
   overlayBitmap:ImageBitmap,
@@ -153,8 +155,9 @@ async function _imageToBackBitmap(image:HTMLImageElement):Promise<ImageBitmap> {
   return createImageBitmap(image, X_EYES, Y_BACK, CX_EYES, CY_EYES);
 }
 
-async function _imageToIrisesImageData(image:HTMLImageElement, preRenderContext:CanvasRenderingContext2D):Promise<ImageData> {
-  const irisesImageBitmap = await createImageBitmap(image, X_EYES, Y_IRISES, CX_EYES, CY_EYES);
+async function _imageToIrisesImageData(image:HTMLImageElement, preRenderContext:CanvasRenderingContext2D, recolorProfile:RecolorProfile|null):Promise<ImageData> {
+  let irisesImageBitmap = await createImageBitmap(image, X_EYES, Y_IRISES, CX_EYES, CY_EYES);
+  if (recolorProfile) irisesImageBitmap = await recolorBitmapByProfile(irisesImageBitmap, recolorProfile, preRenderContext);
   return imageBitmapToImageData(irisesImageBitmap, preRenderContext);
 }
 
@@ -168,8 +171,8 @@ async function _createIrisInfo(irisesImageData:ImageData, irisArea:AreaMeasureme
   }
 }
 
-async function _imageToLeftAndRightIrises(image:HTMLImageElement, preRenderContext:CanvasRenderingContext2D):Promise<IrisInfo[]> {
-  const irisesImageData = await _imageToIrisesImageData(image, preRenderContext);
+async function _imageToLeftAndRightIrises(image:HTMLImageElement, preRenderContext:CanvasRenderingContext2D, irisRecolorProfile:RecolorProfile|null):Promise<IrisInfo[]> {
+  const irisesImageData = await _imageToIrisesImageData(image, preRenderContext, irisRecolorProfile);
   let irisAreas = findAndMeasureOpaqueAreas(irisesImageData, MIN_IRIS_COVERAGE_FACTOR, AreaMeasurementFlags.DIMENSIONS)
   if (irisAreas.length < 2) throw Error('Could not find 2 irises in spritesheet.');
   if (irisAreas.length > 2) {
@@ -200,9 +203,9 @@ async function _imageToLidsBitmap(image:HTMLImageElement, recolorProfile:Recolor
 
 async function _loadBitmaps(spriteSheetUrl:string, maskContext:CanvasRenderingContext2D, 
     preRenderContext:CanvasRenderingContext2D, skinRecolorProfile:RecolorProfile|null,
-    hairRecolorProfile:RecolorProfile|null):Promise<EyesBitmaps> {
+    hairRecolorProfile:RecolorProfile|null, irisRecolorProfile:RecolorProfile|null):Promise<EyesBitmaps> {
   const image = await loadImage(spriteSheetUrl);
-  const [leftIris, rightIris] = await _imageToLeftAndRightIrises(image, preRenderContext);
+  const [leftIris, rightIris] = await _imageToLeftAndRightIrises(image, preRenderContext, irisRecolorProfile);
   const lidsBitmap = await _imageToLidsBitmap(image, skinRecolorProfile, preRenderContext);
   return {
     emotionals: await _generateEmotionals(image, maskContext, preRenderContext, skinRecolorProfile, hairRecolorProfile),
@@ -213,13 +216,14 @@ async function _loadBitmaps(spriteSheetUrl:string, maskContext:CanvasRenderingCo
 }
 
 export type EyesInitData = {
-  spriteSheetUrl:string,
-  skinRecolorProfile:RecolorProfile|null,
-  hairRecolorProfile:RecolorProfile|null,
   backOffsetX?:number,
   backOffsetY?:number,
+  hairRecolorProfile:RecolorProfile|null,
+  irisColor:string,
   lidsOffsetX?:number,
   lidsOffsetY?:number
+  skinRecolorProfile:RecolorProfile|null,
+  spriteSheetUrl:string
 }
 
 function _initDataToBaseOffsets(eyesInitData:EyesInitData):BaseOffsets {
@@ -265,9 +269,10 @@ function _initIrisPositions(leftIris:IrisInfo, rightIris:IrisInfo) {
 async function _onLoad(initData:any):Promise<any> {
   const preRenderContext = createOffScreenContext(CX_EYES, CY_EYES);
   const maskContext = createOffScreenContext(CX_EYES, CY_EYES);
-  const { spriteSheetUrl, skinRecolorProfile, hairRecolorProfile } = initData as EyesInitData;
+  const { spriteSheetUrl, skinRecolorProfile, hairRecolorProfile, irisColor } = initData as EyesInitData;
+  const irisRecolorProfile = irisColor !== undefined ? irisColorToRecolorProfile(nameToIrisColor(irisColor)) : null;
   const { emotionals, backBitmap, leftIris, rightIris, lidsBitmap } = 
-    await _loadBitmaps(spriteSheetUrl, maskContext, preRenderContext, skinRecolorProfile, hairRecolorProfile);
+    await _loadBitmaps(spriteSheetUrl, maskContext, preRenderContext, skinRecolorProfile, hairRecolorProfile, irisRecolorProfile);
   const currentEmotion = Emotion.NEUTRAL;
   const restingLidLevel = LidLevel.NORMAL;
   const attentionDx = 0, attentionDy = 0;

@@ -69,8 +69,9 @@ export function sortHeadChildrenInDrawingOrder(headComponent:CanvasComponent) {
   headComponent.children.sort(compareParts);
 }
 
-export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone = SkinTone.ORIGINAL, hairColor:HairColor = HairColor.ORIGINAL):Promise<CanvasComponent> {
-  const initData = await _loadComponentInitDataFromUrl(partUrl);
+export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone = SkinTone.ORIGINAL, hairColor:HairColor = HairColor.ORIGINAL, initDataOverrides?:any):Promise<CanvasComponent> {
+  let initData = await _loadComponentInitDataFromUrl(partUrl);
+  if (initDataOverrides) initData = {...initData, ...initDataOverrides};
   initData.skinTone = skinToneToName(skinTone);
   initData.skinRecolorProfile = createRecolorProfileForSkinTone(skinTone);
   initData.hairColor = hairColorToName(hairColor);
@@ -81,9 +82,9 @@ export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone
   return _loadCanvasComponentForPartType(partType, initData);
 }
 
-export async function replaceComponentFromPartUrl(originalComponent:CanvasComponent, partUrl:string):Promise<CanvasComponent> {
+export async function replaceComponentFromPartUrl(originalComponent:CanvasComponent, partUrl:string, initDataOverrides?:any):Promise<CanvasComponent> {
   const { skinTone, hairColor } = originalComponent;
-  const nextComponent = await loadComponentFromPartUrl(partUrl, skinTone, hairColor);
+  const nextComponent = await loadComponentFromPartUrl(partUrl, skinTone, hairColor, initDataOverrides);
   _copyComponentProperties(originalComponent, nextComponent);
   if (nextComponent.parent?.partType === HEAD_PART_TYPE) sortHeadChildrenInDrawingOrder(nextComponent.parent);
   originalComponent.setParent(null);

@@ -1,10 +1,16 @@
 import CanvasComponent from "../canvasComponent/CanvasComponent";
-import { HEAD_PART_TYPE, loadComponentFromPartUrl, sortHeadChildrenInDrawingOrder } from "../parts/partLoaderUtil";
+import {
+  EYES_PART_TYPE,
+  HEAD_PART_TYPE,
+  loadComponentFromPartUrl,
+  sortHeadChildrenInDrawingOrder
+} from "../parts/partLoaderUtil";
 import {nameToSkinTone, SkinTone, skinToneToName} from "./SkinTone";
 import FaceDocument from "./FaceDocument";
-import {nameToHairColor, hairColorToName} from "./HairColor";
+import {hairColorToName, nameToHairColor} from "./HairColor";
 
 import {parse} from "yaml";
+import IrisColor, {irisColorToName, nameToIrisColor} from "../parts/eyes/IrisColor";
 
 type Part = {
   url:string,
@@ -50,10 +56,12 @@ export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
   const { base, parts } = faceDefinition;
   const skinTone = nameToSkinTone(faceDefinition.skinTone);
   const hairColor = nameToHairColor(faceDefinition.hairColor);
+  const irisColor = faceDefinition.irisColor;
   const baseComponent = await loadComponentFromPartUrl(base.url, skinTone, hairColor);
   for(let partI = 0; partI < parts.length; ++partI) {
     const part = parts[partI];
-    const childComponent = await loadComponentFromPartUrl(part.url, skinTone, hairColor);
+    const initDataOverrides = { irisColor };
+    const childComponent = await loadComponentFromPartUrl(part.url, skinTone, hairColor, initDataOverrides);
     childComponent.setParent(baseComponent);
     childComponent.offsetX = part.offsetX;
     childComponent.offsetY = part.offsetY;
@@ -66,9 +74,18 @@ export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
   return baseComponent;
 }
 
+function _findIrisColorName(headComponent:CanvasComponent):string {
+  const eyes = _findComponentByPartType(headComponent, EYES_PART_TYPE);
+  const defaultIrisColor = irisColorToName(IrisColor.ORIGINAL)
+  if (!eyes) return defaultIrisColor;
+  const irisColor:string|undefined = eyes.initData.irisColor;
+  return irisColor ?? defaultIrisColor;
+}
+
 export function createFaceDocument(headComponent:CanvasComponent):FaceDocument {
   const faceDocument:FaceDocument = {
     base: _componentToPartValue(headComponent),
+    irisColor: _findIrisColorName(headComponent),
     skinTone: skinToneToName(headComponent.skinTone),
     hairColor: hairColorToName(headComponent.hairColor),
     parts: []
@@ -90,9 +107,10 @@ export async function updateFaceFromDocument(headComponent:CanvasComponent, docu
   const headPart:Part = _parsePartValue(document.base);
   const documentSkinTone = nameToSkinTone(document.skinTone);
   const documentHairColor = nameToHairColor(document.hairColor);
-  const isRecoloring = documentSkinTone !== headComponent.skinTone || documentHairColor !== headComponent.hairColor;
+  const documentIrisColor = _findIrisColorName(headComponent);
+  const isHairOrSkinRecoloring = documentSkinTone !== headComponent.skinTone || documentHairColor !== headComponent.hairColor;
   
-  if (headComponent.partUrl !== headPart.url || isRecoloring) headComponent = await loadComponentFromPartUrl(headPart.url, documentSkinTone, documentHairColor);
+  if (headComponent.partUrl !== headPart.url || isHairOrSkinRecoloring) headComponent = await loadComponentFromPartUrl(headPart.url, documentSkinTone, documentHairColor);
   if (headPart.width && headPart.height) {
     headComponent.width = headPart.width;
     headComponent.height = headPart.height;
@@ -104,8 +122,10 @@ export async function updateFaceFromDocument(headComponent:CanvasComponent, docu
     const part:Part = _parsePartValue(partValue);
     partUrls.push(part.url);
     let component = _findComponentByPartUrl(headComponent, part.url);
-    if (isRecoloring || !component) {
-      const nextComponent = await loadComponentFromPartUrl(part.url, documentSkinTone, documentHairColor);
+    const isIrisRecoloring = component?.partType === EYES_PART_TYPE && component.initData.irisColor !== documentIrisColor;
+    if (isHairOrSkinRecoloring || isIrisRecoloring || !component) {
+      const initDataOverrides = isIrisRecoloring ? { irisColor:documentIrisColor } : undefined;
+      const nextComponent = await loadComponentFromPartUrl(part.url, documentSkinTone, documentHairColor, initDataOverrides);
       const replaceComponent = _findComponentByPartType(headComponent, nextComponent.partType);
       if (replaceComponent) replaceComponent.setParent(null);
       if (nextComponent.partType !== HEAD_PART_TYPE) nextComponent.setParent(headComponent);
