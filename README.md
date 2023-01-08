@@ -7,7 +7,7 @@ This is an early release for tire-kickers and curious folk. When the version goe
 ## Features
 * Animate faces to show 11 emotions, lid levels, blinking, eye attention, and speaking.
 * Faces are configured as a combination of individual parts including head, eyes, and mouth.
-* Skin can be recolored to 6 different tones following the Fitzpatrick Scale.
+* Skin, hair, and eyes can be recolored at load-time.
 * Playback of speech audio with lip animation (visemes) timed to match audio.
 * Face configuration can be loaded from web-hosted files.
 * Extensible to create new face parts with different art assets.
