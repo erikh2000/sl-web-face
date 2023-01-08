@@ -1,15 +1,16 @@
 import CanvasComponent from "../canvasComponent/CanvasComponent";
 import {EYES_PART_TYPE, loadEyesComponent} from "./eyes/eyes";
+import HairColor, {hairColorToName} from "../faces/HairColor";
 import {SkinTone, skinToneToName} from "../faces/SkinTone";
+import {createRecolorProfileForHairColor, createRecolorProfileForSkinTone} from "../rendering/recolorUtil";
+import {EXTRA_PART_TYPE, loadExtraComponent} from "./extra/extra";
 import {HEAD_PART_TYPE, loadHeadComponent} from "./head/head";
 import {loadMouthComponent, MOUTH_PART_TYPE} from "./mouth/mouth";
 import {loadNoseComponent, NOSE_PART_TYPE} from "./nose/nose";
-import {createRecolorProfileForHairColor, createRecolorProfileForSkinTone} from "../rendering/recolorUtil";
 
 import {parse} from 'yaml';
-import HairColor, {hairColorToName} from "../faces/HairColor";
 
-export { EYES_PART_TYPE, HEAD_PART_TYPE, MOUTH_PART_TYPE, NOSE_PART_TYPE };
+export { EYES_PART_TYPE, EXTRA_PART_TYPE, HEAD_PART_TYPE, MOUTH_PART_TYPE, NOSE_PART_TYPE };
 
 async function _loadComponentInitDataFromUrl(url:string):Promise<any> {
   const response = await fetch(url);
@@ -27,7 +28,8 @@ const partTypeToLoaderFunc:PartTypeToLoaderFuncMap = {
   [EYES_PART_TYPE]:loadEyesComponent,
   [HEAD_PART_TYPE]:loadHeadComponent,
   [MOUTH_PART_TYPE]:loadMouthComponent,
-  [NOSE_PART_TYPE]:loadNoseComponent
+  [NOSE_PART_TYPE]:loadNoseComponent,
+  [EXTRA_PART_TYPE]:loadExtraComponent
 };
 
 async function _loadCanvasComponentForPartType(partType:string, initData:any):Promise<CanvasComponent> {
@@ -59,6 +61,7 @@ const partTypeToDrawOrderMap:PartTypeToDrawOrderMap = {
   [MOUTH_PART_TYPE]: 200,
   [NOSE_PART_TYPE]: 300
 };
+// TODO ordering logic for extra parts.
 
 export function sortHeadChildrenInDrawingOrder(headComponent:CanvasComponent) {
   function compareParts(a:CanvasComponent, b:CanvasComponent):number {
