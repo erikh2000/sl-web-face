@@ -1,7 +1,12 @@
 import HairColor, {nameToHairColor} from "../faces/HairColor";
 import {nameToSkinTone, SkinTone} from "../faces/SkinTone";
+import {HEAD_PART_TYPE} from "../parts/head/head";
 
 export const UNLOADED = 'UNLOADED';
+
+// IDs will be unique per DOM/session.
+let nextId = 1;
+function _getNextId():number { return nextId++; }
 
 function _findAbsoluteCoords(component:CanvasComponent):number[] {
   let x = 0, y = 0;
@@ -76,6 +81,8 @@ function _getSkinTone(skinToneName?:string):SkinTone {
 }
 
 class CanvasComponent {
+  // Remember to update .duplicate() to copy across values as needed.
+  private _id:number;
   private _children:CanvasComponent[];
   private _componentState:any;
   private _hairColor:HairColor;
@@ -84,7 +91,6 @@ class CanvasComponent {
   private _isLoaded:boolean;
   private _isUi:boolean;
   private _isVisible:boolean;
-  private _loadPromise:Promise<void>|null;
   private _offsetX:number;
   private _offsetY:number;
   private readonly _onBoundingDimensions:IBoundingDimensionsCallback;
@@ -95,26 +101,52 @@ class CanvasComponent {
   private _width:number;
   
   constructor(onLoad:ILoadCallback, onRender:IRenderCallback, onBoundingDimensions:IBoundingDimensionsCallback) {
-    this._offsetX = this._offsetY = 0;
-    this._children = [];
-    this._parent = null;
     this._onLoad = onLoad;
     this._onRender = onRender;
     this._onBoundingDimensions = onBoundingDimensions;
-    this._isVisible = true;
-    this._loadPromise = null;
-    this._isLoaded = false;
-    this._componentState = null;
-    this._initData = null;
-    this._isUi = false;
+    this._id = _getNextId();
+    this._offsetX = this._offsetY = 0;
     this._width = this._height = 0;
+    this._isUi = false;
+    this._isVisible = true;
+    this._initData = null;
     this._hairColor = HairColor.ORIGINAL;
     this._skinTone = SkinTone.ORIGINAL;
+    this._componentState = null;
+    this._parent = null;
+    this._children = [];
+    this._isLoaded = false;
+  }
+
+  /* Note this is just a shallow copy. If .initData or .componentState will contain mutable object instances,
+     then you'll want something different, e.g. canvas components implement their own duplicate methods. */
+  duplicate(includeUi:boolean = false):CanvasComponent {
+    const copy = new CanvasComponent(this._onLoad, this._onRender, this._onBoundingDimensions);
+    copy.copyId(this);
+    copy._offsetX = this._offsetX;
+    copy._offsetY = this._offsetY;
+    copy._width = this._width;
+    copy._height = this._height;
+    copy._isUi = this._isUi;
+    copy._initData = {...this._initData};
+    copy._hairColor = this._hairColor;
+    copy._skinTone = this._skinTone;
+    copy._componentState = {...this._componentState};
+    copy._isVisible = this._isVisible;
+    const children = includeUi ? this._children : this.findNonUiChildren();
+    copy._children = children.map(child => {
+      const childDuplicate = child.duplicate();
+      childDuplicate.setParent(copy);
+      return childDuplicate;
+    });
+    copy._isLoaded = true;
+    
+    return copy;
   }
   
   async load(initData:any):Promise<void> {
-    this._loadPromise = this._onLoad(initData);
-    this._loadPromise.then((componentState:any) => {
+    const loadPromise = this._onLoad(initData);
+    loadPromise.then((componentState:any) => {
       this._initData = initData;
       this._isLoaded = true;
       this._componentState = componentState;
@@ -125,8 +157,10 @@ class CanvasComponent {
       this._hairColor = _getHairColor(initData.hairColor);
       this._skinTone = _getSkinTone(initData.skinTone);
     });
-    return this._loadPromise;
+    return loadPromise;
   }
+  
+  get id():number { return this._id; }
   
   get x():number { return _findAbsoluteX(this); }
   
@@ -185,6 +219,8 @@ class CanvasComponent {
   
   set isUi(value:boolean) { this._isUi = value; }
 
+  copyId(fromComponent:CanvasComponent) { this._id = fromComponent._id; }
+
   findNonUiChildren():CanvasComponent[] { return this._children.filter(child => !child._isUi); }
   
   setParent(parentComponent:CanvasComponent|null) {
@@ -225,6 +261,16 @@ class CanvasComponent {
   render(context:CanvasRenderingContext2D) {
     const [x,y] = _findAbsoluteCoords(this);
     this.renderAt(context, x, y);
+  }
+  
+  toString():string { return `#${this._id} ${this._initData.partType}@${this._offsetX},${this._offsetY}`; }
+  
+  toVerboseString():string {
+    let concat = `${this.toString()}\n`;
+    this.children.forEach(child => {
+      concat += `  ${child.toVerboseString()}\n`;
+    });
+    return concat;
   }
 }
 

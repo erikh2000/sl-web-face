@@ -50,6 +50,7 @@ function _copyComponentProperties(fromComponent:CanvasComponent, toComponent:Can
   toComponent.width = fromComponent.width;
   toComponent.height = fromComponent.height;
   toComponent.setParent(fromComponent.parent);
+  toComponent.copyId(fromComponent);
 }
 
 export type PartTypeToDrawOrderMap = {
