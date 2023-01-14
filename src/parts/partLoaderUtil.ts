@@ -9,6 +9,12 @@ import {loadMouthComponent, MOUTH_PART_TYPE} from "./mouth/mouth";
 import {loadNoseComponent, NOSE_PART_TYPE} from "./nose/nose";
 
 import {parse} from 'yaml';
+import {
+  createNextDrawOrders,
+  findDrawOrderForComponent,
+  findDrawOrderForComponentFromHead,
+  sortHeadChildrenInDrawingOrder
+} from "../faces/drawOrderUtil";
 
 export { EYES_PART_TYPE, EXTRA_PART_TYPE, HEAD_PART_TYPE, MOUTH_PART_TYPE, NOSE_PART_TYPE };
 
@@ -45,32 +51,13 @@ function _concatDefaultSpriteSheetUrl(partUrl:string) {
 }
 
 function _copyComponentProperties(fromComponent:CanvasComponent, toComponent:CanvasComponent) {
+  toComponent.drawOrder = fromComponent.drawOrder;
   toComponent.offsetX = fromComponent.offsetX;
   toComponent.offsetY = fromComponent.offsetY;
   toComponent.width = fromComponent.width;
   toComponent.height = fromComponent.height;
   toComponent.setParent(fromComponent.parent);
   toComponent.copyId(fromComponent);
-}
-
-export type PartTypeToDrawOrderMap = {
-  [partTypeName: string]: number;
-}
-const partTypeToDrawOrderMap:PartTypeToDrawOrderMap = {
-  [HEAD_PART_TYPE]: 0,
-  [EYES_PART_TYPE]: 100,
-  [MOUTH_PART_TYPE]: 200,
-  [NOSE_PART_TYPE]: 300
-};
-// TODO ordering logic for extra parts.
-
-export function sortHeadChildrenInDrawingOrder(headComponent:CanvasComponent) {
-  function compareParts(a:CanvasComponent, b:CanvasComponent):number {
-    if (a.isUi) return b.isUi ? 0 : 1; // Sort UI components after non-UI.
-    if (b.isUi) return -1;
-    return partTypeToDrawOrderMap[a.partType] - partTypeToDrawOrderMap[b.partType];
-  }
-  headComponent.children.sort(compareParts);
 }
 
 export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone = SkinTone.ORIGINAL, hairColor:HairColor = HairColor.ORIGINAL, initDataOverrides?:any):Promise<CanvasComponent> {
@@ -87,10 +74,17 @@ export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone
 }
 
 export async function replaceComponentFromPartUrl(originalComponent:CanvasComponent, partUrl:string, initDataOverrides?:any):Promise<CanvasComponent> {
+  const _needsNewDrawOrder = (_nextComponent:CanvasComponent) => 
+    (originalComponent.partType === EXTRA_PART_TYPE && _nextComponent.initData.placeAfter !== originalComponent.initData.placeAfter);
+  
   const { skinTone, hairColor } = originalComponent;
   const nextComponent = await loadComponentFromPartUrl(partUrl, skinTone, hairColor, initDataOverrides);
+  if (nextComponent.partType !== originalComponent.partType) throw Error('Unexpected');
   _copyComponentProperties(originalComponent, nextComponent);
-  if (nextComponent.parent?.partType === HEAD_PART_TYPE) sortHeadChildrenInDrawingOrder(nextComponent.parent);
+  if (nextComponent.parent?.partType === HEAD_PART_TYPE) {
+    if (_needsNewDrawOrder(nextComponent)) nextComponent.drawOrder = findDrawOrderForComponentFromHead(nextComponent.parent, nextComponent);
+    sortHeadChildrenInDrawingOrder(nextComponent.parent);
+  }
   originalComponent.setParent(null);
   return nextComponent;
 }

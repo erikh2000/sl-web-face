@@ -1,6 +1,6 @@
 import HairColor, {nameToHairColor} from "../faces/HairColor";
 import {nameToSkinTone, SkinTone} from "../faces/SkinTone";
-import {HEAD_PART_TYPE} from "../parts/head/head";
+import {findDrawOrderForComponentFromHead, UNSPECIFIED_DRAW_ORDER} from "../faces/drawOrderUtil";
 
 export const UNLOADED = 'UNLOADED';
 
@@ -85,6 +85,7 @@ class CanvasComponent {
   private _id:number;
   private _children:CanvasComponent[];
   private _componentState:any;
+  private _drawOrder:number;
   private _hairColor:HairColor;
   private _height:number;
   private _initData:any;
@@ -105,6 +106,7 @@ class CanvasComponent {
     this._onRender = onRender;
     this._onBoundingDimensions = onBoundingDimensions;
     this._id = _getNextId();
+    this._drawOrder = UNSPECIFIED_DRAW_ORDER;
     this._offsetX = this._offsetY = 0;
     this._width = this._height = 0;
     this._isUi = false;
@@ -123,6 +125,7 @@ class CanvasComponent {
   duplicate(includeUi:boolean = false):CanvasComponent {
     const copy = new CanvasComponent(this._onLoad, this._onRender, this._onBoundingDimensions);
     copy.copyId(this);
+    copy._drawOrder = this._drawOrder;
     copy._offsetX = this._offsetX;
     copy._offsetY = this._offsetY;
     copy._width = this._width;
@@ -218,6 +221,10 @@ class CanvasComponent {
   get isUi():boolean { return this._isUi; }
   
   set isUi(value:boolean) { this._isUi = value; }
+  
+  get drawOrder():number { return this._drawOrder; }
+  
+  set drawOrder(value:number) { this._drawOrder = value; } 
 
   copyId(fromComponent:CanvasComponent) { this._id = fromComponent._id; }
 
@@ -226,7 +233,10 @@ class CanvasComponent {
   setParent(parentComponent:CanvasComponent|null) {
     if (this._parent) this._parent._children = this._parent._children.filter(child => child !== this);
     this._parent = parentComponent;
-    if (this._parent) this._parent._children.push(this);
+    if (this._parent) {
+      if (this.drawOrder === UNSPECIFIED_DRAW_ORDER) { this.drawOrder = findDrawOrderForComponentFromHead(this._parent, this); }
+      this._parent._children.push(this);
+    }
   }
   
   addChild(childComponent:CanvasComponent) {

@@ -1,13 +1,9 @@
 import CanvasComponent from "../canvasComponent/CanvasComponent";
-import {
-  EYES_PART_TYPE,
-  HEAD_PART_TYPE,
-  loadComponentFromPartUrl,
-  sortHeadChildrenInDrawingOrder
-} from "../parts/partLoaderUtil";
+import {EYES_PART_TYPE, loadComponentFromPartUrl} from "../parts/partLoaderUtil";
 import {nameToSkinTone, SkinTone, skinToneToName} from "./SkinTone";
 import FaceDocument from "./FaceDocument";
 import {hairColorToName, nameToHairColor} from "./HairColor";
+import {createNextDrawOrders, findDrawOrderForComponent, sortHeadChildrenInDrawingOrder} from './drawOrderUtil';
 
 import {parse} from "yaml";
 import IrisColor, {irisColorToName} from "../parts/eyes/IrisColor";
@@ -57,21 +53,27 @@ export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
   const skinTone = nameToSkinTone(faceDefinition.skinTone);
   const hairColor = nameToHairColor(faceDefinition.hairColor);
   const irisColor = faceDefinition.irisColor;
-  const baseComponent = await loadComponentFromPartUrl(base.url, skinTone, hairColor);
+  const headComponent = await loadComponentFromPartUrl(base.url, skinTone, hairColor);
+  const nextDrawOrders = createNextDrawOrders(headComponent);
   for(let partI = 0; partI < parts.length; ++partI) {
     const part = parts[partI];
     const initDataOverrides = { irisColor };
     const childComponent = await loadComponentFromPartUrl(part.url, skinTone, hairColor, initDataOverrides);
-    childComponent.setParent(baseComponent);
+    childComponent.setParent(headComponent);
     childComponent.offsetX = part.offsetX;
     childComponent.offsetY = part.offsetY;
     if (part.width && part.height) {
       childComponent.width = part.width;
       childComponent.height = part.height;
     } 
+    childComponent.drawOrder = findDrawOrderForComponent(childComponent, nextDrawOrders);
   }
-  sortHeadChildrenInDrawingOrder(baseComponent);
-  return baseComponent;
+  sortHeadChildrenInDrawingOrder(headComponent);
+  return headComponent;
+}
+
+function _findComponentByPartType(headComponent:CanvasComponent, partType:string):CanvasComponent|null {
+  return headComponent.children.find(child => child.partType === partType) ?? null;
 }
 
 function _findIrisColorName(headComponent:CanvasComponent):string {
@@ -93,59 +95,4 @@ export function createFaceDocument(headComponent:CanvasComponent):FaceDocument {
   const headParts = headComponent.findNonUiChildren();
   faceDocument.parts = headParts.map(part => _componentToPartValue(part));
   return faceDocument;
-}
-
-function _findComponentByPartUrl(headComponent:CanvasComponent, partUrl:string):CanvasComponent|null {
-  return headComponent.children.find(child => child.partUrl === partUrl) ?? null;
-}
-
-function _findComponentByPartType(headComponent:CanvasComponent, partType:string):CanvasComponent|null {
-  return headComponent.children.find(child => child.partType === partType) ?? null;
-}
-
-export async function updateFaceFromDocument(headComponent:CanvasComponent, document:FaceDocument):Promise<CanvasComponent> {
-  const headPart:Part = _parsePartValue(document.base);
-  const documentSkinTone = nameToSkinTone(document.skinTone);
-  const documentHairColor = nameToHairColor(document.hairColor);
-  const documentIrisColor = document.irisColor;
-  const isHairOrSkinRecoloring = documentSkinTone !== headComponent.skinTone || documentHairColor !== headComponent.hairColor;
-  
-  if (headComponent.partUrl !== headPart.url || isHairOrSkinRecoloring) headComponent = await loadComponentFromPartUrl(headPart.url, documentSkinTone, documentHairColor);
-  if (headPart.width && headPart.height) {
-    headComponent.width = headPart.width;
-    headComponent.height = headPart.height;
-  }
-  
-  const partUrls:string[] = [];
-  for(let partNo = 0; partNo < document.parts.length; ++partNo) {
-    const partValue = document.parts[partNo]; 
-    const part:Part = _parsePartValue(partValue);
-    partUrls.push(part.url);
-    let component = _findComponentByPartUrl(headComponent, part.url);
-    const isIrisRecoloring = component?.partType === EYES_PART_TYPE && component.initData.irisColor !== documentIrisColor;
-    if (isHairOrSkinRecoloring || isIrisRecoloring || !component) {
-      const initDataOverrides = isIrisRecoloring ? { irisColor:documentIrisColor } : undefined;
-      const nextComponent = await loadComponentFromPartUrl(part.url, documentSkinTone, documentHairColor, initDataOverrides);
-      const replaceComponent = _findComponentByPartType(headComponent, nextComponent.partType);
-      if (replaceComponent) replaceComponent.setParent(null);
-      if (nextComponent.partType !== HEAD_PART_TYPE) nextComponent.setParent(headComponent);
-      component = nextComponent;
-    }
-    component.offsetX = part.offsetX;
-    component.offsetY = part.offsetY;
-    if (part.width && part.height) {
-      component.width = part.width;
-      component.height = part.height;
-    }
-  }
-
-  for(let childNo = 0; childNo < headComponent.children.length; ++childNo) {
-    const child = headComponent.children[childNo];
-    if (child.isUi) continue;
-    if (!partUrls.includes(child.partUrl)) child.setParent(null);
-  }
-
-  sortHeadChildrenInDrawingOrder(headComponent);
-  
-  return headComponent;
 }
