@@ -1,7 +1,6 @@
-import { publishEvent, subscribeEvent } from "../events/thePubSub";
-import Topic from "../events/topics";
 import LidLevel from "../events/lidLevels";
 import Emotion from "../events/emotions";
+import FaceEventManager from "../events/FaceEventManager";
 
 const ATTENTION_INTERVAL_RANGE = 10000;
 const ATTENTION_INTERVAL_MINIMUM = 1000;
@@ -12,60 +11,59 @@ function _getRandomAttentionTarget():Target {
   return { dx: Math.random() * 2 - 1, dy: Math.random() * 2 - 1 };
 }
 
-function _changeToRandomAttentionTarget(energy:number):NodeJS.Timeout {
-  const target = _getRandomAttentionTarget();
-  publishEvent(Topic.ATTENTION, target);
-  return setTimeout(() => _changeToRandomAttentionTarget(energy), _getRandomAttentionChangeInterval(energy));
-}
-
 function _getRandomAttentionChangeInterval(energy:number) {
   return energy * (Math.random() * ATTENTION_INTERVAL_MINIMUM + ATTENTION_INTERVAL_RANGE);
 }
 
-//  NEUTRAL, CONFUSED, SAD, AFRAID, EVIL, SUSPICIOUS, AMUSED, HAPPY, THINKING, ANGRY, IRRITATED
-const emotionEnergyAmounts = 
-    [1,      2,        1,   2,      4,    3,          2,      3,     1,        4,     3];
-const MAX_AMOUNT = 6;
-function _calcEnergy(lidLevel:LidLevel, emotion:Emotion) {
-  const lidAmount:number = lidLevel * 2;
-  const emotionAmount = emotionEnergyAmounts[emotion];
-  const amount = Math.min(lidAmount + emotionAmount, MAX_AMOUNT);
-  return 1 / amount;
+function _delayChangeToRandomAttentionTarget(faceEventManager:FaceEventManager, faceId:number, energy:number):NodeJS.Timeout {
+  return setTimeout(() => _changeToRandomAttentionTarget(faceEventManager, faceId, energy), _getRandomAttentionChangeInterval(energy));
+}
+
+function _changeToRandomAttentionTarget(faceEventManager:FaceEventManager, faceId:number, energy:number):NodeJS.Timeout {
+  const { dx, dy } = _getRandomAttentionTarget();
+  faceEventManager.setAttention(faceId, dx, dy);
+  return _delayChangeToRandomAttentionTarget(faceEventManager, faceId, energy);
 }
 
 class AttentionController {
-  lastTimeout:NodeJS.Timeout|null = null;
-  lidLevel:number = LidLevel.NORMAL;
-  emotion:Emotion = Emotion.NEUTRAL;
-  energy:number = 1;
+  private _faceEventManager:FaceEventManager;
+  private _faceId:number;
+  private _lastTimeout:NodeJS.Timeout|null;
+  private _lidLevel:number;
+  private _emotion:Emotion;
+  private _energy:number;
   
-  private _onLidLevelChange = (lidLevel:LidLevel) => {
-    this.lidLevel = lidLevel;
-    this.energy = _calcEnergy(this.lidLevel, this.emotion);
-  }
-
-  private _onEmotionChange = (emotion:Emotion) => {
-    this.emotion = emotion;
-    this.energy = _calcEnergy(this.lidLevel, this.emotion);
+  constructor(faceEventManager:FaceEventManager, faceId:number) {
+    this._faceEventManager = faceEventManager;
+    this._faceId = faceId;
+    this._lastTimeout = null;
+    this._lidLevel = LidLevel.NORMAL;
+    this._emotion = Emotion.NEUTRAL;
+    this._energy = 1;
   }
 
   start() {
-    this.energy = _calcEnergy(this.lidLevel, this.emotion);
-    this.lastTimeout = _changeToRandomAttentionTarget(this.energy);
-    subscribeEvent(Topic.LID_LEVEL, this._onLidLevelChange);
-    subscribeEvent(Topic.EMOTION, this._onEmotionChange);
+    this._lastTimeout = _changeToRandomAttentionTarget(this._faceEventManager, this._faceId, this._energy);
   }
   
   lookAt(dx:number, dy:number) {
-    if (this.lastTimeout) clearTimeout(this.lastTimeout);
-    publishEvent(Topic.ATTENTION, {dx, dy});
-    return setTimeout(() => _changeToRandomAttentionTarget(this.energy), _getRandomAttentionChangeInterval(this.energy));
+    if (this._lastTimeout) clearTimeout(this._lastTimeout);
+    this._faceEventManager.setAttention(this._faceId, dx, dy);
+    this._lastTimeout = _delayChangeToRandomAttentionTarget(this._faceEventManager, this._faceId, this._energy);
+  }
+  
+  get energy():number { return this._energy; }
+  
+  set energy(energy:number) { 
+    this._energy = energy;
+    if (this._lastTimeout) clearTimeout(this._lastTimeout);
+    this._lastTimeout = _delayChangeToRandomAttentionTarget(this._faceEventManager, this._faceId, this._energy);
   }
 
   stop() {
-    if(this.lastTimeout) {
-      clearTimeout(this.lastTimeout);
-      this.lastTimeout = null;
+    if(this._lastTimeout) {
+      clearTimeout(this._lastTimeout);
+      this._lastTimeout = null;
     }
   }
 }

@@ -2,13 +2,13 @@ export { default as CanvasComponent } from './canvasComponent/CanvasComponent';
 export { default as AttentionController } from './controllers/AttentionController';
 export { default as BlinkController } from './controllers/BlinkController';
 export { default as Emotion } from './events/emotions';
+export { default as FaceEventManager } from './events/FaceEventManager';
 export { default as Topic } from './events/topics';
 export { default as LidLevel } from './events/lidLevels';
 export { default as SpeechAudio } from './speech/SpeechAudio';
 
 export type { default as FaceDocument } from './faces/FaceDocument';
 
-export * from './events/thePubSub';
 export * from './faces/HairColor';
 export * from './faces/SkinTone';
 export * from './faces/faceDocumentUtil';

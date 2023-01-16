@@ -60,6 +60,10 @@ interface IBoundingDimensionsCallback {
   (componentState:any):[width:number, height:number];
 }
 
+interface IComponentStateUpdatedCallback {
+  (componentState:any, componentStateChanges:any):void
+}
+
 export const UI_PREFIX = 'ui:';
 
 function _getHairColor(hairColorName?:string):HairColor {
@@ -95,16 +99,18 @@ class CanvasComponent {
   private _offsetX:number;
   private _offsetY:number;
   private readonly _onBoundingDimensions:IBoundingDimensionsCallback;
+  private readonly _onComponentStateUpdated:IComponentStateUpdatedCallback;
   private readonly _onLoad:ILoadCallback;
   private readonly _onRender:IRenderCallback;
   private _parent:CanvasComponent|null;
   private _skinTone:SkinTone;
   private _width:number;
   
-  constructor(onLoad:ILoadCallback, onRender:IRenderCallback, onBoundingDimensions:IBoundingDimensionsCallback) {
+  constructor(onLoad:ILoadCallback, onRender:IRenderCallback, onBoundingDimensions:IBoundingDimensionsCallback, onComponentStateUpdated:IComponentStateUpdatedCallback) {
     this._onLoad = onLoad;
     this._onRender = onRender;
     this._onBoundingDimensions = onBoundingDimensions;
+    this._onComponentStateUpdated = onComponentStateUpdated;
     this._id = _getNextId();
     this._drawOrder = UNSPECIFIED_DRAW_ORDER;
     this._offsetX = this._offsetY = 0;
@@ -123,7 +129,7 @@ class CanvasComponent {
   /* Note this is just a shallow copy. If .initData or .componentState will contain mutable object instances,
      then you'll want something different, e.g. canvas components implement their own duplicate methods. */
   duplicate(includeUi:boolean = false):CanvasComponent {
-    const copy = new CanvasComponent(this._onLoad, this._onRender, this._onBoundingDimensions);
+    const copy = new CanvasComponent(this._onLoad, this._onRender, this._onBoundingDimensions, this._onComponentStateUpdated);
     copy.copyId(this);
     copy._drawOrder = this._drawOrder;
     copy._offsetX = this._offsetX;
@@ -281,6 +287,11 @@ class CanvasComponent {
       concat += `  ${child.toVerboseString()}\n`;
     });
     return concat;
+  }
+  
+  updateComponentState(changes:any) {
+    this._componentState = { ...this._componentState, ...changes };
+    this._onComponentStateUpdated(this._componentState, changes);
   }
 }
 
