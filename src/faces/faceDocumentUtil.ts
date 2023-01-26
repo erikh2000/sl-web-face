@@ -35,10 +35,8 @@ function _componentToPartValue(partComponent:CanvasComponent):string {
   return `${partUrl} @${offsetX},${offsetY},${width},${height}`;
 }
 
-async function _loadFaceDefinitionFromUrl(url:string):Promise<any> {
-  const response = await fetch(url);
-  const text = await response.text();
-  const object:any = parse(text);
+function _loadFaceDefinitionFromYml(faceDefYml:string):any {
+  const object:any = parse(faceDefYml);
   if (!object.base) throw Error('Required "base" field missing from face file.');
   object.base = _parsePartValue(object.base);
   if (!object.parts) object.parts = [];
@@ -47,8 +45,14 @@ async function _loadFaceDefinitionFromUrl(url:string):Promise<any> {
   return object;
 }
 
-export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
-  const faceDefinition = await _loadFaceDefinitionFromUrl(faceUrl);
+async function _loadFaceDefinitionFromUrl(url:string):Promise<any> {
+  const response = await fetch(url);
+  const text = await response.text();
+  return _loadFaceDefinitionFromYml(text);
+}
+
+export async function loadFaceFromDefinition(faceDefYml:string):Promise<CanvasComponent> {
+  const faceDefinition = _loadFaceDefinitionFromYml(faceDefYml);
   const { base, parts } = faceDefinition;
   const skinTone = nameToSkinTone(faceDefinition.skinTone);
   const hairColor = nameToHairColor(faceDefinition.hairColor);
@@ -65,11 +69,17 @@ export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
     if (part.width && part.height) {
       childComponent.width = part.width;
       childComponent.height = part.height;
-    } 
+    }
     childComponent.drawOrder = findDrawOrderForComponent(childComponent, nextDrawOrders);
   }
   sortHeadChildrenInDrawingOrder(headComponent);
   return headComponent;
+}
+
+export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
+  const response = await fetch(faceUrl);
+  const faceDefYml = await response.text();
+  return loadFaceFromDefinition(faceDefYml);
 }
 
 function _findComponentByPartType(headComponent:CanvasComponent, partType:string):CanvasComponent|null {
