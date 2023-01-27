@@ -58,6 +58,8 @@ export async function loadFaceFromDefinition(faceDefYml:string):Promise<CanvasCo
   const hairColor = nameToHairColor(faceDefinition.hairColor);
   const irisColor = faceDefinition.irisColor;
   const headComponent = await loadComponentFromPartUrl(base.url, skinTone, hairColor);
+  headComponent.width = base.width;
+  headComponent.height = base.height;
   const nextDrawOrders = createNextDrawOrders(headComponent);
   for(let partI = 0; partI < parts.length; ++partI) {
     const part = parts[partI];
