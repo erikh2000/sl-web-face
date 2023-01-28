@@ -8,6 +8,9 @@ import {createNextDrawOrders, findDrawOrderForComponent, sortHeadChildrenInDrawi
 import {parse} from "yaml";
 import IrisColor, {irisColorToName} from "../parts/eyes/IrisColor";
 
+const MIN_WIDTH = 10, MAX_WIDTH = 10000, MIN_HEIGHT = 10, MAX_HEIGHT = 10000;
+const MIN_X = -10000, MIN_Y = -10000, MAX_X = 10000, MAX_Y = 10000;
+
 type Part = {
   url:string,
   offsetX:number,
@@ -45,10 +48,13 @@ function _loadFaceDefinitionFromYml(faceDefYml:string):any {
   return object;
 }
 
-async function _loadFaceDefinitionFromUrl(url:string):Promise<any> {
-  const response = await fetch(url);
-  const text = await response.text();
-  return _loadFaceDefinitionFromYml(text);
+function _clamp(value:any, min:number, max:number):number {
+  if (isNaN(value) || typeof value !== 'number') return min;
+  return value < min 
+    ? min 
+    : value > max 
+      ? max 
+      : value;
 }
 
 export async function loadFaceFromDefinition(faceDefYml:string):Promise<CanvasComponent> {
@@ -58,19 +64,19 @@ export async function loadFaceFromDefinition(faceDefYml:string):Promise<CanvasCo
   const hairColor = nameToHairColor(faceDefinition.hairColor);
   const irisColor = faceDefinition.irisColor;
   const headComponent = await loadComponentFromPartUrl(base.url, skinTone, hairColor);
-  headComponent.width = base.width;
-  headComponent.height = base.height;
+  headComponent.width = _clamp(base.width, MIN_WIDTH, MAX_WIDTH);
+  headComponent.height = _clamp(base.height, MIN_HEIGHT, MAX_HEIGHT);
   const nextDrawOrders = createNextDrawOrders(headComponent);
   for(let partI = 0; partI < parts.length; ++partI) {
     const part = parts[partI];
     const initDataOverrides = { irisColor };
     const childComponent = await loadComponentFromPartUrl(part.url, skinTone, hairColor, initDataOverrides);
     childComponent.setParent(headComponent);
-    childComponent.offsetX = part.offsetX;
-    childComponent.offsetY = part.offsetY;
+    childComponent.offsetX = _clamp(part.offsetX, MIN_X, MAX_X);
+    childComponent.offsetY = _clamp(part.offsetY, MIN_Y, MAX_Y);
     if (part.width && part.height) {
-      childComponent.width = part.width;
-      childComponent.height = part.height;
+      childComponent.width = _clamp(part.width, MIN_WIDTH, MAX_WIDTH);
+      childComponent.height = _clamp(part.height, MIN_HEIGHT, MAX_HEIGHT);
     }
     childComponent.drawOrder = findDrawOrderForComponent(childComponent, nextDrawOrders);
   }
