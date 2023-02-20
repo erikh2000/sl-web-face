@@ -6,9 +6,12 @@ export { default as FaceEventManager } from './events/FaceEventManager';
 export { default as Topic } from './events/topics';
 export { default as LidLevel } from './events/lidLevels';
 export { default as SpeechAudio } from './speech/SpeechAudio';
+export { default as FakeSpeechAudio } from './speech/FakeSpeechAudio';
 
+export type { ISpeechAudio } from './speech/ISpeechAudio';
 export type { default as FaceDocument } from './faces/FaceDocument';
 
+export * from './events/thePubSub';
 export * from './faces/HairColor';
 export * from './faces/SkinTone';
 export * from './faces/faceDocumentUtil';
