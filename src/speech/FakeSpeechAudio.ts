@@ -13,9 +13,9 @@ class FakeSpeechAudio implements ISpeechAudio {
   private _faceEventManager:FaceEventManager|null;
   private _faceId:number;
 
-  constructor(dialogue:string) {
+  constructor(dialogue:string, speedMultiplier:number) {
     this._checkForVisemesTimeout = null;
-    const lipzText = generateLipzTextFromSpeechText(dialogue);
+    const lipzText = generateLipzTextFromSpeechText(dialogue, speedMultiplier);
     const lipzEvents:LipzEvent[] = loadLipzFromText(lipzText);
     this._lipzIterator = new EventIterator<LipzEvent>(lipzEvents);
     this._startPlayTime = 0;
