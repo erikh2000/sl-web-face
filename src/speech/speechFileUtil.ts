@@ -10,8 +10,8 @@ async function _loadLipzTextFromUrl(url:string):Promise<string> {
 }
 
 export async function loadSpeechFromUrl(wavUrl:string):Promise<SpeechAudio> {
-  const audioBuffer = await loadWavFromUrl(wavUrl);
+  const wavFileData = await loadWavFromUrl(wavUrl);
   const lipzUrl = replaceUrlResourceExtension(wavUrl, '.lipz.txt');
-  const lipzText = await _loadLipzTextFromUrl(lipzUrl);
-  return new SpeechAudio(audioBuffer, lipzText);
+  const lipzText = await _loadLipzTextFromUrl(lipzUrl); // TODO - use wavFileData.cues.
+  return new SpeechAudio(wavFileData.audioBuffer, lipzText);
 }
