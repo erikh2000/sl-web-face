@@ -39,18 +39,22 @@ function renderCanvas() {
 init();
 ```
 
-How to animate? You can publish events that will cause the face to react.
+How to animate? You can use the FaceEventManager.
 
 ```javascript
-import { loadFaceFromUrl, publishEvent, Topics, Viseme, Emotion, LidLevel } from 'sl-web-face';
+import { loadFaceFromUrl, FaceEventManager, Viseme, Emotion, LidLevel } from 'sl-web-face';
 
 ...all the code from first example...
 
-function blink() { publishEvent(Topics.BLINK, {}); }
-function lookAt(dx:number, dy:number) { publishEvent(Topics.ATTENTION, {dx, dy}); }
-function beHappy() { publishEvent(Topics.EMOTION, Emotion.HAPPY); }
-function squint() { publishEvent(Topics.LID_LEVEL, LidLevel.SQUINT); }
-function makeOFace() { publishEvent(Topics.VISEME, Viseme.O); }
+const JERRY_FACE_ID = 1; // Unique ID for this face.
+const eventManager = new FaceEventManager();
+eventManager.bindFacee(face, JERRY_FACE_ID);
+
+eventManager.blink(JERRY_FACE_ID); // Blink once.
+eventManager.setAttention(JERRY_FACE_ID, 0, 1); // Look down.
+eventManager.setEmotion(JERRY_FACE_ID, Emotion.HAPPY); // Be happy.
+eventManager.setLidLevel(JERRY_FACE_ID, LidLevel.SQUINT); // Squint.
+eventManager.setViseme(JERRY_FACE_ID, Viseme.O); // Make an O face.
 ```
 
 Some idle eye movements including blinking and looking around can be performed automatically with controllers.
@@ -60,25 +64,34 @@ import { loadFaceFromUrl, publishEvent, BlinkController, AttentionController } f
 
 ...all the code from first example...
 
+const JERRY_FACE_ID = 1; // Unique ID for this face.
+const eventManager = new FaceEventManager();
+eventManager.bindFacee(face, JERRY_FACE_ID);
+
 let blinkController, attentionController;
 
 function startIdleEyeMovements() {
-  blinkController = new BlinkController();
-  attentionController = new AttentionController();
+  blinkController = new BlinkController(eventManager, JERRY_FACE_ID);
+  attentionController = new AttentionController(eventManager, JERRY_FACE_ID);
   blinkController.start();
   attentionController.start();
 }
 ```
 
-You can play an audio file with timed lip animations (visemes) if you have a `.wav` and corresponding `.lipz` file.
+You can play an audio file with timed lip animations (visemes) if you have a `.wav` and corresponding `.lipz` file. Or a WISP-generated `.wav` file that embeds lip animation timings.
 
 ```javascript
 import { loadFaceFromUrl, publishEvent, loadSpeechFromUrl } from 'sl-web-face';
 
 ...all the code from first example...
 
+const JERRY_FACE_ID = 1; // Unique ID for this face.
+const eventManager = new FaceEventManager();
+eventManager.bindFacee(face, JERRY_FACE_ID);
+
 async function saySomething() {
   const speechAudio = await loadSpeechFromUrl('https://example.com/dialogue.wav'); // Will look for a file called dialogue.lipz.txt at the same location.
+  speechAudio.setSpeakingFace(eventManager, JERRY_FACE_ID);
   speechAudio.play(); // Plays audio and animates lips.
 }
 ```
