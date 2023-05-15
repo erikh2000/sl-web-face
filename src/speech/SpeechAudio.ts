@@ -15,10 +15,10 @@ class SpeechAudio implements ISpeechAudio {
   private _faceEventManager:FaceEventManager|null;
   private _faceId:number;
 
-  constructor(audioBuffer:AudioBuffer, lipzText:string) {
+  constructor(audioBuffer:AudioBuffer, lipz:string|LipzEvent[]) {
     this._audioBuffer = audioBuffer;
     this._audioBufferSourceNode = null;
-    const lipzEvents:LipzEvent[] = loadLipzFromText(lipzText);
+    const lipzEvents:LipzEvent[] = typeof lipz === 'string' ? loadLipzFromText(lipz) : lipz;
     this._lipzIterator = new EventIterator<LipzEvent>(lipzEvents);
     this._startPlayTime = 0;
     this._checkForVisemesTimeout = null;
