@@ -279,6 +279,19 @@ class CanvasComponent {
     this.renderAt(context, x, y);
   }
   
+  resize(width:number, height:number) {
+    if (this._width === width && this._height === height) return;
+    const scaleX = width / this._width, scaleY = height / this._height;
+    this._width = width;
+    this._height = height;
+    this._offsetX *= scaleX;
+    this._offsetY *= scaleY;
+    this._children.forEach(child => {
+      const nextChildWidth = child._width * scaleX, nextChildHeight = child._height * scaleY;
+      child.resize(nextChildWidth, nextChildHeight);
+    });
+  }
+  
   toString():string { return `#${this._id} ${this._initData.partType}@${this._offsetX},${this._offsetY}`; }
   
   toVerboseString():string {
