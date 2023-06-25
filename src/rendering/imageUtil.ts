@@ -28,6 +28,27 @@ export async function contextToImageBitmap(context:CanvasRenderingContext2D):Pro
   return createImageBitmap(imageData);
 }
 
+export async function imageBitmapToPngBytes(sourceBitmap:ImageBitmap, preRenderContext:CanvasRenderingContext2D):Promise<Uint8Array> {
+  preRenderContext.clearRect(0, 0, sourceBitmap.width, sourceBitmap.height);
+  preRenderContext.drawImage(sourceBitmap, 0, 0);
+  const canvas = preRenderContext.canvas;
+  const pngBlob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+      } else {
+        reject();
+      }
+    }, 'image/png');
+  });
+  return new Uint8Array(await pngBlob.arrayBuffer());
+}
+
+export async function pngBytesToImageBitmap(pngBytes:Uint8Array):Promise<ImageBitmap> {
+  const blob = new Blob([pngBytes], {type: 'image/png'});
+  return createImageBitmap(blob);
+}
+
 const OPACITY_THRESHOLD = 127;
 const PIXEL_SIZE = 4;
 const TRANSPARENT_ALPHA = 0;
