@@ -279,8 +279,8 @@ class CanvasComponent {
     this.renderAt(context, x, y);
   }
   
-  resize(width:number, height:number) {
-    if (this._width === width && this._height === height) return;
+  resize(width:number, height:number, includeUi:boolean = false) {
+    if (this._width === width && this._height === height || (!includeUi && this._isUi)) return;
     const scaleX = width / this._width, scaleY = height / this._height;
     this._width = width;
     this._height = height;
