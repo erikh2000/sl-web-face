@@ -2,8 +2,6 @@
 
 A library for animating faces on the web. It uses a web canvas for rendering.
 
-This is an early release for tire-kickers and curious folk. When the version goes to 1.0+, it can be considered production-ready. I won't bother publishing to NPM until then.
-
 ## Features
 * Animate faces to show 11 emotions, lid levels, blinking, eye attention, and speaking.
 * Faces are configured as a combination of individual parts including head, eyes, and mouth.
