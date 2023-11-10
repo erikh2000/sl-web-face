@@ -10,8 +10,6 @@ import {loadNoseComponent, NOSE_PART_TYPE} from "./nose/nose";
 
 import {parse} from 'yaml';
 import {
-  createNextDrawOrders,
-  findDrawOrderForComponent,
   findDrawOrderForComponentFromHead,
   sortHeadChildrenInDrawingOrder
 } from "../faces/drawOrderUtil";

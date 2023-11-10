@@ -1,7 +1,7 @@
 {
   "name": "sl-web-face",
   "description": "Library for animating faces using web canvas and audio.",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "author": "Erik Hermansen",
   "license": "MIT",
   "private": false,
@@ -9,7 +9,7 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "sl-web-audio": "^1.0.0",
-    "sl-web-speech": "^1.0.0",
+    "sl-web-speech": "^1.1.2",
     "yaml": "^2.1.3"
   },
   "scripts": {
