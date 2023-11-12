@@ -59,9 +59,11 @@ function _copyComponentProperties(fromComponent:CanvasComponent, toComponent:Can
 }
 
 function _fullUrl(partUrl:string):string {
-  const publicUrl = `${process.env.PUBLIC_URL}` ?? '';
+  let publicUrl = `${process.env.PUBLIC_URL}` ?? '';
   if (!publicUrl.length || partUrl.startsWith(publicUrl)) return partUrl;
-  return publicUrl.endsWith('/') ? `${publicUrl}${partUrl}` : `${publicUrl}/${partUrl}`;
+  if (publicUrl.endsWith('/')) publicUrl = publicUrl.substring(0, publicUrl.length - 1);
+  if (partUrl.startsWith('/')) partUrl = partUrl.substring(1);
+  return `${publicUrl}/${partUrl}`;
 }
 
 export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone = SkinTone.ORIGINAL, hairColor:HairColor = HairColor.ORIGINAL, initDataOverrides?:any):Promise<CanvasComponent> {
