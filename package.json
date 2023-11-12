@@ -1,7 +1,7 @@
 {
   "name": "sl-web-face",
   "description": "Library for animating faces using web canvas and audio.",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "author": "Erik Hermansen",
   "license": "MIT",
   "private": false,

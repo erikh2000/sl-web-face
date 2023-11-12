@@ -3,6 +3,7 @@ import {createCoordQueue, createCoordToProcessed, floodFill, floodFillAt} from "
 export async function loadImage(url:string):Promise<HTMLImageElement> {
   const image:HTMLImageElement = new Image();
   image.src = url;
+  image.crossOrigin = "anonymous";
   return new Promise<HTMLImageElement>((resolve, reject) => {
     image.onload = () => {
       resolve(image);
