@@ -85,7 +85,7 @@ export async function loadFaceFromDefinition(faceDefYml:string):Promise<CanvasCo
 }
 
 export async function loadFaceFromUrl(faceUrl:string):Promise<CanvasComponent> {
-  const response = await fetch(faceUrl);
+  const response = await fetch(faceUrl, { mode: 'cors' });
   const faceDefYml = await response.text();
   return loadFaceFromDefinition(faceDefYml);
 }

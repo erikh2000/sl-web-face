@@ -17,7 +17,7 @@ import {
 export { EYES_PART_TYPE, EXTRA_PART_TYPE, HEAD_PART_TYPE, MOUTH_PART_TYPE, NOSE_PART_TYPE };
 
 async function _loadComponentInitDataFromUrl(url:string):Promise<any> {
-  const response = await fetch(url);
+  const response = await fetch(url, { mode: 'cors' });
   const text = await response.text();
   const object:any = parse(text);
   if (!object.partType || !object.partType.length) throw Error('Required "partType" field missing from parts file.');

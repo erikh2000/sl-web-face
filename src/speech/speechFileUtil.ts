@@ -4,7 +4,7 @@ import SpeechAudio from "./SpeechAudio";
 import {loadWavFromUrl} from 'sl-web-audio';
 
 async function _loadLipzTextFromUrl(url:string):Promise<string> {
-  const response = await fetch(url);
+  const response = await fetch(url, { mode: 'cors' });
   if (response.status !== 200 && response.status !== 304) return '';
   return response.text();
 }
