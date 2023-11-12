@@ -58,16 +58,23 @@ function _copyComponentProperties(fromComponent:CanvasComponent, toComponent:Can
   toComponent.copyId(fromComponent);
 }
 
+function _fullUrl(partUrl:string):string {
+  const publicUrl = `${process.env.PUBLIC_URL}` ?? '';
+  if (!publicUrl.length || partUrl.startsWith(publicUrl)) return partUrl;
+  return publicUrl.endsWith('/') ? `${publicUrl}${partUrl}` : `${publicUrl}/${partUrl}`;
+}
+
 export async function loadComponentFromPartUrl(partUrl:string, skinTone:SkinTone = SkinTone.ORIGINAL, hairColor:HairColor = HairColor.ORIGINAL, initDataOverrides?:any):Promise<CanvasComponent> {
-  let initData = await _loadComponentInitDataFromUrl(partUrl);
+  const fullUrl = _fullUrl(partUrl);
+  let initData = await _loadComponentInitDataFromUrl(fullUrl);
   if (initDataOverrides) initData = {...initData, ...initDataOverrides};
   initData.skinTone = skinToneToName(skinTone);
   initData.skinRecolorProfile = createRecolorProfileForSkinTone(skinTone);
   initData.hairColor = hairColorToName(hairColor);
   initData.hairRecolorProfile = createRecolorProfileForHairColor(hairColor);
-  initData.partUrl = partUrl;
+  initData.partUrl = fullUrl;
   const { partType, spriteSheetUrl } = initData;
-  if (!spriteSheetUrl) initData.spriteSheetUrl = _concatDefaultSpriteSheetUrl(partUrl);
+  if (!spriteSheetUrl) initData.spriteSheetUrl = _concatDefaultSpriteSheetUrl(fullUrl);
   return _loadCanvasComponentForPartType(partType, initData);
 }
 
