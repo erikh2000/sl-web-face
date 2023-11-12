@@ -59,6 +59,8 @@ function _copyComponentProperties(fromComponent:CanvasComponent, toComponent:Can
 }
 
 function _fullUrl(partUrl:string):string {
+  const partUrlLower = partUrl.toLowerCase();
+  if (partUrlLower.startsWith('http://') || partUrlLower.startsWith('https://')) return partUrl; // If a fully qualified URL, assume it was meant to be used as-is.
   let publicUrl = `${process.env.PUBLIC_URL}` ?? '';
   if (!publicUrl.length || partUrl.startsWith(publicUrl)) return partUrl;
   if (publicUrl.endsWith('/')) publicUrl = publicUrl.substring(0, publicUrl.length - 1);
